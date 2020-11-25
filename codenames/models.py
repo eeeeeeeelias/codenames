@@ -20,7 +20,9 @@ from .consts import get_non_auto_score_string
 class Cup(models.Model):
     """
     Fields:
-    number, date, place
+    number
+    [date]
+    [place]
     """
     number = models.IntegerField(
         default=CURRENT_CUP_NUMBER,
@@ -104,11 +106,11 @@ class Team(models.Model):
     """
     Fields:
     ->first_name
-    ->second_name
-    ->group_id
+    [->second_name]
+    [->group_id]
     is_paid
-    has_come
-    seed
+    [has_come]
+    [seed]
     """
 
     first_player_id = models.ForeignKey(
@@ -168,6 +170,15 @@ class Team(models.Model):
 
 
 class ResultType(models.Model):
+    """
+    Fields:
+    abbr
+    _description
+    is_auto
+    is_home_win
+    [_auto_score]
+    """
+
     abbr = models.CharField(max_length=2)
     _description = models.CharField(max_length=30)
     is_auto = models.BooleanField(default=False)
@@ -221,7 +232,7 @@ class Arena(models.Model):
     Fields:
     ->group_id
     number
-    room
+    [room]
     """
 
     group_id = models.ForeignKey(
@@ -260,7 +271,7 @@ class GameResult(models.Model):
     ->home_team_id
     ->away_team_id
     ->arena_id
-    ->result_type_id
+    [->result_type_id]
     round_number
     score
     """
