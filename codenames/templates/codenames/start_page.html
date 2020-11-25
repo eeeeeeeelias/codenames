@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="{% static 'codenames/style.css' %}">
+</head>
+<body>
+    <a href="{% url 'codenames:all_groups_tables' %}">Все результаты</a>
+    {% if group_names %}
+    <ul>
+    {% for group_name in group_names %}
+    <li><a href="{% url 'codenames:one_group_table' group_name %}">Группа {{group_name}}</a></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+</body>
+</html>
