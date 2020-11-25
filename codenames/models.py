@@ -42,7 +42,7 @@ class Group(models.Model):
     """
     Fields:
     ->cup_id
-    group_name
+    name
     """
 
     cup_id = models.ForeignKey(
@@ -51,7 +51,7 @@ class Group(models.Model):
         related_name="%(class)scup_id"
     )
 
-    group_name = models.CharField(
+    name = models.CharField(
         default=GROUP_NAMES[0],
         max_length=1,
         choices=GROUP_NAMES
@@ -59,11 +59,11 @@ class Group(models.Model):
 
     @property
     def short(self):
-        return f"{self.group_name}"
+        return f"{self.name}"
 
     @property
     def long(self):
-        return f"{self.cup_id}, group {self.group_name}"
+        return f"{self.cup_id}, group {self.name}"
 
     def __str__(self):
         return self.long
