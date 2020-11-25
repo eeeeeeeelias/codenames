@@ -1,3 +1,6 @@
+"""
+Admin interface representation of codenames app.
+"""
 from django.contrib import admin
 from .models import Arena, Cup, GameResult, Group, Player, ResultType, Team
 
