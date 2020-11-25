@@ -37,7 +37,7 @@ class Cup(models.Model):
 
 
 def get_current_cup_id():
-    return Cup.objects.get(number=CURRENT_CUP_NUMBER)
+    return Cup.objects.get(number=CURRENT_CUP_NUMBER).id
 
 
 class Group(models.Model):
@@ -49,6 +49,7 @@ class Group(models.Model):
 
     cup_id = models.ForeignKey(
         Cup,
+        default=get_current_cup_id,
         on_delete=models.CASCADE,
         related_name="%(class)scup_id"
     )
@@ -99,7 +100,7 @@ class Player(models.Model):
 
 
 def get_empty_player_id():
-    return Player.objects.get(first_name="$Name", last_name="$No")
+    return Player.objects.get(first_name="$Name", last_name="$No").id
 
 
 class Team(models.Model):
@@ -108,6 +109,7 @@ class Team(models.Model):
     ->first_name
     [->second_name]
     [->group_id]
+    ->cup_id
     is_paid
     [has_come]
     [seed]
@@ -133,6 +135,12 @@ class Team(models.Model):
         blank=True,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup_id"
+    )
+    cup_id = models.ForeignKey(
+        Cup,
+        default=get_current_cup_id,
+        on_delete=models.CASCADE,
+        related_name="%(class)scup_id"
     )
 
     is_paid = models.BooleanField(
