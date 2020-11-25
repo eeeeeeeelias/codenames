@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand, CommandError
-from codenames.consts import CURRENT_CUP_NUMBER
 from codenames.models import Team
 from .add_players import add_one_player
 from .add_players import PLAYERS_DELIMITER
@@ -13,7 +12,7 @@ class Command(BaseCommand):
             "--cup_number",
             action="store",
             type=int,
-            help=f"Cup number (default = {CURRENT_CUP_NUMBER})")
+            help=f"Cup number (default = current cup)")
         # TODO: add csv read
         parser.add_argument(
             "-f", "--first_name_first",
