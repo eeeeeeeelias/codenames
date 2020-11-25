@@ -2,10 +2,16 @@
 Views for codenames app.
 """
 
+from django.http import Http404
 from django.shortcuts import render
+from django.utils.translation import gettext_lazy as _
 
 from .consts import CURRENT_CUP_NUMBER
-from .models import Group
+from .models import Cup, Group
+
+
+NON_EXISTING_CUP_ERROR_MESSAGE = _("There is no such cup")
+NON_EXISTING_GROUP_ERROR_MESSAGE = _("There is no such group")
 
 
 def start_view(request):
@@ -20,15 +26,35 @@ def start_view(request):
     return render(request, "codenames/start_page.html", context)
 
 
-def all_groups_tables_view(request):
+def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
     """
     View with tables of all groups.
     """
-    raise NotImplementedError
+    try:
+        cup = Cup.objects.get(number=cup_number)
+    except Cup.DoesNotExist as cup_no_exist:
+        raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
+    context = {
+        "cup_number": cup.number,
+    }
+    return render(request, "codenames/all_groups_tables.html", context)
 
 
-def one_group_table_view(request):
+def one_group_table_view(request, group_name, *,
+                         cup_number=CURRENT_CUP_NUMBER):
     """
     View with table of one group.
     """
-    raise NotImplementedError
+    try:
+        Cup.objects.get(number=cup_number)
+    except Cup.DoesNotExist as cup_no_exist:
+        raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
+    try:
+        group = Group.objects.get(name=group_name, cup_id__number=cup_number)
+    except Group.DoesNotExist as group_no_exist:
+        raise Http404(NON_EXISTING_GROUP_ERROR_MESSAGE) from group_no_exist
+    context = {
+        "cup_number": cup_number,
+        "group_name": group.name,
+    }
+    return render(request, "codenames/one_group_table.html", context)
