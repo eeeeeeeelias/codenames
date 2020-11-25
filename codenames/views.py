@@ -4,14 +4,21 @@ Views for codenames app.
 
 from django.http import Http404
 from django.shortcuts import render
+from django.template.defaulttags import register
 from django.utils.translation import gettext_lazy as _
 
 from .consts import CURRENT_CUP_NUMBER
 from .models import Cup, Group
+from .table_render import render_result_table_content, render_result_table_header
 
 
 NON_EXISTING_CUP_ERROR_MESSAGE = _("There is no such cup")
 NON_EXISTING_GROUP_ERROR_MESSAGE = _("There is no such group")
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 
 def start_view(request):
@@ -34,8 +41,17 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         cup = Cup.objects.get(number=cup_number)
     except Cup.DoesNotExist as cup_no_exist:
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
+    cup_groups = Group.objects.filter(cup_id__number=cup_number)
+    group_names = sorted(cg.name for cg in cup_groups)
+    print(group_names)
+    group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
+                     for gn in group_names}
+    group_tables = {gn: render_result_table_content(cup_groups.get(name=gn))
+                    for gn in group_names}
     context = {
         "cup_number": cup.number,
+        "groups_headers": group_headers,
+        "groups_tables": group_tables,
     }
     return render(request, "codenames/all_groups_tables.html", context)
 
