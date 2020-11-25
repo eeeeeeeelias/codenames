@@ -1,14 +1,27 @@
+"""
+Models for codenamess app.
+"""
+
+import typing as tp
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
-import typing as tp
-
-from .consts import *
+from .consts import CURRENT_CUP_NUMBER
+from .consts import GROUP_NAMES, MAX_GROUP_SIZE
+from .consts import EARLY_FEE_SIZE, LATE_FEE_SIZE
+from .consts import SCORE_CHOICES
+from .consts import MAX_ARENAS_NUMBER
+from .consts import get_non_auto_score_string
 
 
 class Cup(models.Model):
+    """
+    Fields:
+    number, date, place
+    """
     number = models.IntegerField(
         default=CURRENT_CUP_NUMBER,
         choices=[(i, i) for i in range(1, CURRENT_CUP_NUMBER + 1)]
@@ -26,6 +39,12 @@ def get_current_cup_id():
 
 
 class Group(models.Model):
+    """
+    Fields:
+    ->cup_id
+    group_name
+    """
+
     cup_id = models.ForeignKey(
         Cup,
         on_delete=models.CASCADE,
@@ -51,6 +70,12 @@ class Group(models.Model):
 
 
 class Player(models.Model):
+    """
+    Fields:
+    first_name
+    second_name
+    """
+
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
 
@@ -76,6 +101,16 @@ def get_empty_player_id():
 
 
 class Team(models.Model):
+    """
+    Fields:
+    ->first_name
+    ->second_name
+    ->group_id
+    is_paid
+    has_come
+    seed
+    """
+
     first_player_id = models.ForeignKey(
         Player,
         default=get_empty_player_id,
@@ -155,15 +190,13 @@ class ResultType(models.Model):
     def home_auto_score(self):
         if self.is_home_win:
             return 0
-        else:
-            return -self._auto_score
+        return -self._auto_score
 
     @property
     def away_auto_score(self):
         if self.is_away_win:
             return 0
-        else:
-            return self._auto_score
+        return self._auto_score
 
     def __str__(self):
         return self.description
@@ -184,10 +217,12 @@ class ResultType(models.Model):
 
 
 class Arena(models.Model):
-    number = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(MAX_ARENAS_NUMBER)]
-    )
+    """
+    Fields:
+    ->group_id
+    number
+    room
+    """
 
     group_id = models.ForeignKey(
         Group,
@@ -195,13 +230,20 @@ class Arena(models.Model):
         related_name="%(class)sgroup_id"
     )
 
+    number = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(MAX_ARENAS_NUMBER)]
+    )
+
+    room = models.CharField(blank=True, null=True, max_length=30)
+
     @property
     def short(self):
-        return f"{group_id.short}{number}"
+        return f"{self.group_id.short}{self.number}"
 
     @property
     def long(self):
-        return f"({group_id.cup_id}) {group_id.short}{number}"
+        return f"({self.group_id.cup_id}) {self.group_id.short}{self.number}"
 
     def __str__(self):
         return self.long
@@ -212,6 +254,17 @@ def get_current_arenas():
 
 
 class GameResult(models.Model):
+    """
+    Fields:
+    ->group_id
+    ->home_team_id
+    ->away_team_id
+    ->arena_id
+    ->result_type_id
+    round_number
+    score
+    """
+
     group_id = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
@@ -235,17 +288,17 @@ class GameResult(models.Model):
         related_name="arena_id"
     )
 
-    round_number = models.IntegerField(
-        validators=[MinValueValidator(0),
-                    MaxValueValidator(MAX_GROUP_SIZE - 1)]
-    )
-
     result_type_id = models.ForeignKey(
         ResultType,
         null=True,
         blank=True,
         on_delete=models.CASCADE,
         related_name="result_type_id"
+    )
+
+    round_number = models.IntegerField(
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(MAX_GROUP_SIZE - 1)]
     )
 
     # 4 == home team 4:0 away_team
@@ -273,13 +326,13 @@ class GameResult(models.Model):
         return get_non_auto_score_string(-self.score)
 
     def clean(self):
-        if result_type_id.is_auto and score != 0:
+        if self.result_type_id.is_auto and self.score != 0:
             raise ValidationError(_('do not choose score for auto end game'))
-        if not result_type_id.is_auto and score == 0:
+        if not self.result_type_id.is_auto and self.score == 0:
             raise ValidationError(_('choose score for non-auto end game'))
-        if result_type_id.is_home_win and score < 0:
+        if self.result_type_id.is_home_win and self.score < 0:
             raise ValidationError(
                 _('home team won: chosen score says the opposite'))
-        if result_type_id.is_away_win and score > 0:
+        if self.result_type_id.is_away_win and self.score > 0:
             raise ValidationError(
                 _('away team won: chosen score says the opposite'))

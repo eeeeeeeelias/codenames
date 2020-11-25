@@ -1,3 +1,7 @@
+"""
+Consts for codenames app.
+"""
+
 import typing as tp
 
 from string import ascii_uppercase
@@ -24,10 +28,14 @@ AWAY_TEAM_WORDS_NUMBER: int = 8
 
 
 def get_non_auto_score_string(score: int) -> str:
+    """
+    Get string with scores with colon
+    :param score: negative int for away win, positive int for home win
+    :return: string with score
+    """
     if score >= 0:
         return f"{score}:0"
-    else:
-        return f"0:{-score}"
+    return f"0:{-score}"
 
 
 SCORE_CHOICES = [(score, get_non_auto_score_string(score))
