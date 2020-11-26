@@ -12,9 +12,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         group = Group.objects.get(name=options["group_name"],
-                                  cup_id__number=CURRENT_CUP_NUMBER)
+                                  cup__number=CURRENT_CUP_NUMBER)
         params = {
-            "group_id": group,
+            "group": group,
             "number": options["arena_number"]
         }
         try:
