@@ -37,7 +37,7 @@ class Cup(models.Model):
 
 
 def get_current_cup_id():
-    return Cup.objects.get(number=CURRENT_CUP_NUMBER).id
+    return Cup.objects.get_or_create(number=CURRENT_CUP_NUMBER)[0].id
 
 
 class Group(models.Model):
@@ -73,7 +73,7 @@ class Group(models.Model):
 
 
 def get_empty_group_id():
-    return Group.objects.get(name="Z")
+    return Group.objects.get_or_create(name="Z")[0].id
 
 
 class Player(models.Model):
@@ -141,8 +141,7 @@ class Team(models.Model):
 
     group = models.ForeignKey(
         Group,
-        null=True,
-        blank=True,
+        default=get_empty_group_id,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup"
     )
@@ -191,7 +190,7 @@ def get_empty_team_id():
     return Team.objects.get_or_create(
         first_player=get_empty_player_id(),
         second_player=get_another_empty_player_id()
-    ).id
+    )[0].id
 
 
 class ResultType(models.Model):
@@ -262,8 +261,7 @@ class Arena(models.Model):
 
     group = models.ForeignKey(
         Group,
-        blank=True,
-        null=True,
+        default=get_empty_group_id,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup"
     )
@@ -288,7 +286,7 @@ class Arena(models.Model):
 
 
 def get_empty_arena_id():
-    return Arena.objects.get_or_create(number=0).id
+    return Arena.objects.get_or_create(number=0)[0].id
 
 
 class GameResult(models.Model):
