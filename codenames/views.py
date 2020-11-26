@@ -25,8 +25,10 @@ def start_view(request):
     """
     Start view of tounament website.
     """
-    groups = [g.name for g in Group.objects.filter(
-        cup__number=CURRENT_CUP_NUMBER)]
+    groups = [
+        g.name for g in Group.objects.filter(cup__number=CURRENT_CUP_NUMBER,
+                                             dummy=False)
+    ]
     context = {
         "group_names": groups
     }
