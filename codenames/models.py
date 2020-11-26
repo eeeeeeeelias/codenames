@@ -59,6 +59,7 @@ class Group(models.Model):
         max_length=1,
         choices=GROUP_NAMES
     )
+
     dummy = models.BooleanField(
         default=False
     )
@@ -185,12 +186,20 @@ class Team(models.Model):
                  (LATE_FEE_SIZE, LATE_FEE_SIZE)]
     )
 
+    dummy = models.BooleanField(
+        default=False
+    )
+
     @property
     def short(self):
+        if not self.second_player:
+            return f"{self.first_player.short}/???"
         return f"{self.first_player.short}/{self.second_player.short}"
 
     @property
     def long(self):
+        if not self.second_player:
+            return f"{self.first_player.long}/???"
         return f"{self.first_player.long}/{self.second_player.long}"
 
     def __str__(self):
@@ -360,6 +369,9 @@ class GameResult(models.Model):
         default=0,
         choices=SCORE_CHOICES
     )
+
+    def __str__(self):
+        return "GameResult"  # TODO: add logic
 
     @property
     def is_finished(self) -> bool:
