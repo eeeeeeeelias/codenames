@@ -26,7 +26,7 @@ def start_view(request):
     Start view of tounament website.
     """
     groups = [g.name for g in Group.objects.filter(
-        cup_id__number=CURRENT_CUP_NUMBER)]
+        cup__number=CURRENT_CUP_NUMBER)]
     context = {
         "group_names": groups
     }
@@ -41,7 +41,7 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         cup = Cup.objects.get(number=cup_number)
     except Cup.DoesNotExist as cup_no_exist:
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
-    cup_groups = Group.objects.filter(cup_id__number=cup_number)
+    cup_groups = Group.objects.filter(cup__number=cup_number)
     group_names = sorted(cg.name for cg in cup_groups)
     print(group_names)
     group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
@@ -66,7 +66,7 @@ def one_group_table_view(request, group_name, *,
     except Cup.DoesNotExist as cup_no_exist:
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
     try:
-        group = Group.objects.get(name=group_name, cup_id__number=cup_number)
+        group = Group.objects.get(name=group_name, cup__number=cup_number)
     except Group.DoesNotExist as group_no_exist:
         raise Http404(NON_EXISTING_GROUP_ERROR_MESSAGE) from group_no_exist
     context = {
