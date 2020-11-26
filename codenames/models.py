@@ -43,15 +43,15 @@ def get_current_cup_id():
 class Group(models.Model):
     """
     Fields:
-    ->cup_id
+    ->cup
     name
     """
 
-    cup_id = models.ForeignKey(
+    cup = models.ForeignKey(
         Cup,
         default=get_current_cup_id,
         on_delete=models.CASCADE,
-        related_name="%(class)scup_id"
+        related_name="%(class)scup"
     )
 
     name = models.CharField(
@@ -66,17 +66,21 @@ class Group(models.Model):
 
     @property
     def long(self):
-        return f"{self.cup_id}, group {self.name}"
+        return f"{self.cup}, group {self.name}"
 
     def __str__(self):
         return self.long
+
+
+def get_empty_group_id():
+    return Group.objects.get(name="Z")
 
 
 class Player(models.Model):
     """
     Fields:
     first_name
-    second_name
+    last_name
     """
 
     first_name = models.CharField(max_length=30)
@@ -100,47 +104,53 @@ class Player(models.Model):
 
 
 def get_empty_player_id():
-    return Player.objects.get(first_name="$Name", last_name="$No").id
+    return Player.objects.get_or_create(first_name="$Name",
+                                        last_name="$No")[0].id
+
+
+def get_another_empty_player_id():
+    return Player.objects.get_or_create(first_name="$Suchplayer",
+                                        last_name="$No")[0].id
 
 
 class Team(models.Model):
     """
     Fields:
-    ->first_name
-    [->second_name]
-    [->group_id]
-    ->cup_id
+    ->first_player
+    [->second_player]
+    [->group]
+    ->cup
     is_paid
     [has_come]
     [seed]
     """
 
-    first_player_id = models.ForeignKey(
+    first_player = models.ForeignKey(
         Player,
         default=get_empty_player_id,
         on_delete=models.CASCADE,
-        related_name="first_player_id"
+        related_name="first_player"
     )
-    second_player_id = models.ForeignKey(
+    second_player = models.ForeignKey(
         Player,
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name="second_player_id"
+        related_name="second_player"
     )
 
-    group_id = models.ForeignKey(
+    group = models.ForeignKey(
         Group,
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name="%(class)sgroup_id"
+        related_name="%(class)sgroup"
     )
-    cup_id = models.ForeignKey(
+    cup = models.ForeignKey(
         Cup,
         default=get_current_cup_id,
         on_delete=models.CASCADE,
-        related_name="%(class)scup_id"
+        related_name="%(class)scup"
     )
 
     is_paid = models.BooleanField(
@@ -167,14 +177,21 @@ class Team(models.Model):
 
     @property
     def short(self):
-        return f"{self.first_player_id.short}/{self.second_player_id.short}"
+        return f"{self.first_player.short}/{self.second_player.short}"
 
     @property
     def long(self):
-        return f"{self.first_player_id.long}/{self.second_player_id.long}"
+        return f"{self.first_player.long}/{self.second_player.long}"
 
     def __str__(self):
         return self.long
+
+
+def get_empty_team_id():
+    return Team.objects.get_or_create(
+        first_player=get_empty_player_id(),
+        second_player=get_another_empty_player_id()
+    ).id
 
 
 class ResultType(models.Model):
@@ -238,15 +255,17 @@ class ResultType(models.Model):
 class Arena(models.Model):
     """
     Fields:
-    ->group_id
+    ->group
     number
     [room]
     """
 
-    group_id = models.ForeignKey(
+    group = models.ForeignKey(
         Group,
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
-        related_name="%(class)sgroup_id"
+        related_name="%(class)sgroup"
     )
 
     number = models.IntegerField(
@@ -258,61 +277,65 @@ class Arena(models.Model):
 
     @property
     def short(self):
-        return f"{self.group_id.short}{self.number}"
+        return f"{self.group.short}{self.number}"
 
     @property
     def long(self):
-        return f"({self.group_id.cup_id}) {self.group_id.short}{self.number}"
+        return f"({self.group.cup}) {self.group.short}{self.number}"
 
     def __str__(self):
         return self.long
 
 
-def get_current_arenas():
-    return Arena.objects.filter(group_id__cup_id__number=CURRENT_CUP_NUMBER)
+def get_empty_arena_id():
+    return Arena.objects.get_or_create(number=0).id
 
 
 class GameResult(models.Model):
     """
     Fields:
-    ->group_id
-    ->home_team_id
-    ->away_team_id
-    ->arena_id
-    [->result_type_id]
+    ->group
+    ->home_team
+    ->away_team
+    ->arena
+    [->result_type]
     round_number
     score
     """
 
-    group_id = models.ForeignKey(
+    group = models.ForeignKey(
         Group,
+        default=get_empty_group_id,
         on_delete=models.CASCADE,
-        related_name="%(class)sgroup_id"
+        related_name="%(class)sgroup"
     )
 
-    home_team_id = models.ForeignKey(
+    home_team = models.ForeignKey(
         Team,
+        default=get_empty_team_id,
         on_delete=models.CASCADE,
-        related_name="home_team_id"
+        related_name="home_team"
     )
-    away_team_id = models.ForeignKey(
+    away_team = models.ForeignKey(
         Team,
+        default=get_empty_team_id,
         on_delete=models.CASCADE,
-        related_name="away_team_id"
+        related_name="away_team"
     )
 
-    arena_id = models.ForeignKey(
+    arena = models.ForeignKey(
         Arena,
+        default=get_empty_arena_id,
         on_delete=models.CASCADE,
-        related_name="arena_id"
+        related_name="arena",
     )
 
-    result_type_id = models.ForeignKey(
+    result_type = models.ForeignKey(
         ResultType,
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name="result_type_id"
+        related_name="result_type"
     )
 
     round_number = models.IntegerField(
@@ -330,7 +353,7 @@ class GameResult(models.Model):
 
     @property
     def is_finished(self) -> bool:
-        return self.result_type_id is not None
+        return self.result_type is not None
 
     @property
     def home_score(self) -> tp.Optional[str]:
@@ -345,13 +368,13 @@ class GameResult(models.Model):
         return get_non_auto_score_string(-self.score)
 
     def clean(self):
-        if self.result_type_id.is_auto and self.score != 0:
+        if self.result_type.is_auto and self.score != 0:
             raise ValidationError(_('do not choose score for auto end game'))
-        if not self.result_type_id.is_auto and self.score == 0:
+        if not self.result_type.is_auto and self.score == 0:
             raise ValidationError(_('choose score for non-auto end game'))
-        if self.result_type_id.is_home_win and self.score < 0:
+        if self.result_type.is_home_win and self.score < 0:
             raise ValidationError(
                 _('home team won: chosen score says the opposite'))
-        if self.result_type_id.is_away_win and self.score > 0:
+        if self.result_type.is_away_win and self.score > 0:
             raise ValidationError(
                 _('away team won: chosen score says the opposite'))
