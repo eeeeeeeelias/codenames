@@ -1,12 +1,19 @@
+"""
+Console command to add teams (and players contained) to db.
+"""
+
 import typing as tp
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from codenames.consts import CURRENT_CUP_NUMBER
 from codenames.models import Player, Team
 from .add_players import add_one_player
-from .add_players import NAMES_DELIMITER, PLAYERS_DELIMITER
+from .add_players import PLAYERS_DELIMITER
 
 class Command(BaseCommand):
+    """
+    :usage: manage.py add_teams
+    """
     help = "Add teams from file"
 
     def add_arguments(self, parser):
@@ -16,7 +23,7 @@ class Command(BaseCommand):
             action="store",
             default=CURRENT_CUP_NUMBER,
             type=int,
-            help=f"Cup number (default = current cup)")
+            help=f"Cup number (default = {CURRENT_CUP_NUMBER})")
         # TODO: add csv read
         parser.add_argument(
             "-f", "--first_name_first",
@@ -39,10 +46,11 @@ class Command(BaseCommand):
 
                 players: tp.List[Player] = []
                 for player_line in player_lines:
-                    players.append(add_one_player(player_line,
-                                   out=self.stdout,
-                                   first_name_first=options["first_name_first"],
-                                   verbosity=options["verbosity"]))
+                    players.append(
+                        add_one_player(player_line,
+                       out=self.stdout,
+                       first_name_first=options["first_name_first"],
+                       verbosity=options["verbosity"]))
 
                 existing_teams = Team.objects.filter(
                     first_player=players[0],

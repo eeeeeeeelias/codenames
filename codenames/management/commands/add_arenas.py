@@ -1,9 +1,16 @@
-from django.core.management.base import BaseCommand, CommandError
+"""
+Console command to add arenas (game places) to db.
+"""
+
+from django.core.management.base import BaseCommand
 from codenames.consts import CURRENT_CUP_NUMBER
 from codenames.models import Arena, Group
 
 
 class Command(BaseCommand):
+    """
+    :usage: manage.py add_arenas
+    """
     help = "Add arenas"
 
     def add_arguments(self, parser):
