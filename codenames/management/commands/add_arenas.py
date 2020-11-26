@@ -33,4 +33,4 @@ class Command(BaseCommand):
             return
         new_arena = Arena(**params)
         new_arena.save()
-        self.stdout.write(f"{new_arena} saved")
+        self.stdout.write(f"Arena {new_arena} saved")

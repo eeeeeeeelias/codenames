@@ -33,4 +33,4 @@ class Command(BaseCommand):
                 pass
 
             new_result_type.save()
-            self.stdout.write(f"{new_result_type} saved")
+            self.stdout.write(f"Result type {new_result_type} saved")

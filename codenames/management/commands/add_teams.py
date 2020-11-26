@@ -72,4 +72,4 @@ class Command(BaseCommand):
                 new_team: Team = Team(first_player=players[0],
                                       second_player=players[1])
                 new_team.save()
-                self.stdout.write(f"{new_team} saved")
+                self.stdout.write(f"Team {new_team} saved")

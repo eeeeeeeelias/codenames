@@ -35,7 +35,7 @@ def add_one_player(player_line: str,
 
     new_player: Player = Player(first_name=first_name, last_name=last_name)
     new_player.save()
-    out.write(f"{new_player} saved")
+    out.write(f"Player {new_player} saved")
     return new_player
 
 
