@@ -41,13 +41,14 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         cup = Cup.objects.get(number=cup_number)
     except Cup.DoesNotExist as cup_no_exist:
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
-    cup_groups = Group.objects.filter(cup__number=cup_number)
+    cup_groups = Group.objects.filter(cup__number=cup_number, dummy=False)
     group_names = sorted(cg.name for cg in cup_groups)
     print(group_names)
     group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
                      for gn in group_names}
     group_tables = {gn: render_result_table_content(cup_groups.get(name=gn))
                     for gn in group_names}
+
     context = {
         "cup_number": cup.number,
         "groups_headers": group_headers,
@@ -69,6 +70,7 @@ def one_group_table_view(request, group_name, *,
         group = Group.objects.get(name=group_name, cup__number=cup_number)
     except Group.DoesNotExist as group_no_exist:
         raise Http404(NON_EXISTING_GROUP_ERROR_MESSAGE) from group_no_exist
+
     context = {
         "cup_number": cup_number,
         "group_name": group.name,

@@ -59,6 +59,9 @@ class Group(models.Model):
         max_length=1,
         choices=GROUP_NAMES
     )
+    dummy = models.BooleanField(
+        default=False
+    )
 
     @property
     def short(self):
@@ -72,8 +75,8 @@ class Group(models.Model):
         return self.long
 
 
-def get_empty_group_id():
-    return Group.objects.get_or_create(name="Z")[0].id
+def get_dummy_group_id():
+    return Group.objects.get_or_create(name="Z", dummy=True)[0].id
 
 
 class Player(models.Model):
@@ -85,6 +88,10 @@ class Player(models.Model):
 
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
+
+    dummy = models.BooleanField(
+        default=False
+    )
 
     @property
     def short(self):
@@ -103,14 +110,18 @@ class Player(models.Model):
         return self.long
 
 
-def get_empty_player_id():
+def get_dummy_player_id():
     return Player.objects.get_or_create(first_name="$Name",
-                                        last_name="$No")[0].id
+                                        last_name="$No",
+                                        dummy=True
+                                        )[0].id
 
 
-def get_another_empty_player_id():
+def get_another_dummy_player_id():
     return Player.objects.get_or_create(first_name="$Suchplayer",
-                                        last_name="$No")[0].id
+                                        last_name="$No",
+                                        dummy=True
+                                        )[0].id
 
 
 class Team(models.Model):
@@ -127,7 +138,7 @@ class Team(models.Model):
 
     first_player = models.ForeignKey(
         Player,
-        default=get_empty_player_id,
+        default=get_dummy_player_id,
         on_delete=models.CASCADE,
         related_name="first_player"
     )
@@ -141,7 +152,7 @@ class Team(models.Model):
 
     group = models.ForeignKey(
         Group,
-        default=get_empty_group_id,
+        default=get_dummy_group_id,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup"
     )
@@ -186,10 +197,11 @@ class Team(models.Model):
         return self.long
 
 
-def get_empty_team_id():
+def get_dummy_team_id():
     return Team.objects.get_or_create(
-        first_player=get_empty_player_id(),
-        second_player=get_another_empty_player_id()
+        first_player=get_dummy_player_id(),
+        second_player=get_another_dummy_player_id(),
+        dummy=True
     )[0].id
 
 
@@ -261,7 +273,7 @@ class Arena(models.Model):
 
     group = models.ForeignKey(
         Group,
-        default=get_empty_group_id,
+        default=get_dummy_group_id,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup"
     )
@@ -285,8 +297,8 @@ class Arena(models.Model):
         return self.long
 
 
-def get_empty_arena_id():
-    return Arena.objects.get_or_create(number=0)[0].id
+def get_dummy_arena_id():
+    return Arena.objects.get_or_create(number=0, dummy=True)[0].id
 
 
 class GameResult(models.Model):
@@ -303,27 +315,27 @@ class GameResult(models.Model):
 
     group = models.ForeignKey(
         Group,
-        default=get_empty_group_id,
+        default=get_dummy_group_id,
         on_delete=models.CASCADE,
         related_name="%(class)sgroup"
     )
 
     home_team = models.ForeignKey(
         Team,
-        default=get_empty_team_id,
+        default=get_dummy_team_id,
         on_delete=models.CASCADE,
         related_name="home_team"
     )
     away_team = models.ForeignKey(
         Team,
-        default=get_empty_team_id,
+        default=get_dummy_team_id,
         on_delete=models.CASCADE,
         related_name="away_team"
     )
 
     arena = models.ForeignKey(
         Arena,
-        default=get_empty_arena_id,
+        default=get_dummy_arena_id,
         on_delete=models.CASCADE,
         related_name="arena",
     )
