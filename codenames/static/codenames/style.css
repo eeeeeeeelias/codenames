@@ -11,17 +11,7 @@ th {
     background-color: #3AAFA9;
 }
 
-.self_result_cell {
-    background-color: #17252A;
-}
-
-.home_result_cell {
+.won_cell {
+    font-weight: bolder;
     background-color: #3AAFA9;
-}
-
-.away_result_cell {
-}
-
-.seed_header {
-    width: 2cm;
 }
