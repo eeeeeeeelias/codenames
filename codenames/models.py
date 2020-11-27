@@ -9,12 +9,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
+from .consts import get_score_str
 from .consts import CURRENT_CUP_NUMBER
 from .consts import GROUP_NAMES, MAX_GROUP_SIZE
 from .consts import EARLY_FEE_SIZE, LATE_FEE_SIZE
 from .consts import SCORE_CHOICES
 from .consts import MAX_ARENAS_NUMBER
-from .consts import get_non_auto_score_string
 
 
 DUMMY_STRING_REPRESENTATION = "---------"
@@ -258,24 +258,20 @@ class ResultType(models.Model):
     )
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self._description
 
     @property
-    def is_away_win(self):
+    def is_away_win(self) -> bool:
         return not self.is_home_win
 
     @property
-    def home_auto_score(self):
-        if self.is_home_win:
-            return 0
-        return -self._auto_score
+    def home_auto_score(self) -> tp.Optional[int]:
+        return self._auto_score
 
     @property
-    def away_auto_score(self):
-        if self.is_away_win:
-            return 0
-        return self._auto_score
+    def away_auto_score(self) -> tp.Optional[int]:
+        return -self._auto_score
 
     def __str__(self):
         return self.description
@@ -403,24 +399,43 @@ class GameResult(models.Model):
         choices=SCORE_CHOICES
     )
 
+    @property
+    def long(self) -> str:
+        return (
+            f"{self.home_team.short} {get_score_str(self.home_score)} "
+            f"({self.result_type.abbr}) {self.away_team.short}"
+        )
+
     def __str__(self):
-        return "GameResult"  # TODO: add logic
+        return self.long
 
     @property
     def is_finished(self) -> bool:
         return self.result_type is not None
 
     @property
-    def home_score(self) -> tp.Optional[str]:
+    def absolute_score(self) -> tp.Optional[int]:
         if not self.is_finished:
             return None
-        return get_non_auto_score_string(self.score)
+        if self.result_type.is_auto:
+            return abs(self.result_type.home_auto_score)
+        return abs(self.score)
 
     @property
-    def away_score(self) -> tp.Optional[str]:
+    def home_score(self) -> tp.Optional[int]:
         if not self.is_finished:
             return None
-        return get_non_auto_score_string(-self.score)
+        if self.result_type.is_auto:
+            return self.result_type.home_auto_score
+        return self.score
+
+    @property
+    def away_score(self) -> tp.Optional[int]:
+        if not self.is_finished:
+            return None
+        if self.result_type.is_auto:
+            return self.result_type.away_auto_score
+        return -self.score
 
     def clean(self):
         if self.result_type.is_auto and self.score != 0:
