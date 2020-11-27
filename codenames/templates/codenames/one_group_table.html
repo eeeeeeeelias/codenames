@@ -7,8 +7,27 @@
     <link rel="stylesheet" type="text/css" href="{% static 'codenames/style.css' %}">
 </head>
 <body>
-    <p>
-        Coming soon: results of Cup {{ cup_number }}, group {{ group_name }}
-    </p>
+    <table>
+    <tr>
+        {% for cell in group_header %}
+        <th {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
+            <div {% if cell.title %}title="{{cell.title}}"{% endif %}>
+                {{ cell.content }}
+            </div>
+        </th>
+        {% endfor %}
+    </tr>
+    {% for row in group_table %}
+    <tr>
+        {% for cell in row %}
+        <td {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
+            <div {% if cell.title %}title="{{cell.title}}"{% endif %} class="hey">
+                {{ cell.content }}
+            </div>
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </table>
 </body>
 </html>
