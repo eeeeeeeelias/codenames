@@ -1,17 +1,43 @@
 body {
-    background-color: #DEF2F1;
+    background-color: #EAE7DC;
 }
 
 table, th, td {
     border-collapse: collapse;
-    border: 2px solid #17252A;
+    border: 2px solid #E85A4F;
 }
 
 th {
-    background-color: #3AAFA9;
+    background-color: #E98074;
 }
 
 .won_cell {
     font-weight: bolder;
-    background-color: #3AAFA9;
+    background-color: #D8C3A5;
+}
+
+.place_header {
+    width: 15px;
+    text-align: center;
+}
+
+.place_cell {
+    text-align: center;
+}
+
+.gameresult_header {
+    width: 30px;
+}
+
+.gameresult_cell {
+    text-align: center;
+}
+
+.auto_win, .auto_lose {
+    font-style: italic;
+    background-color: #8E8D8A;
+}
+
+.itself_cell {
+    background-color: #202020;
 }
