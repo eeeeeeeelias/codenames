@@ -9,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .consts import CURRENT_CUP_NUMBER
 from .models import Cup, Group
-from .table_render import render_result_table_content, render_result_table_header
+from .table_render import render_result_table_content
+from .table_render import render_result_table_header
 
 
 NON_EXISTING_CUP_ERROR_MESSAGE = _("There is no such cup")
@@ -53,6 +54,7 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
 
     context = {
         "cup_number": cup.number,
+        "group_name": group.name,
         "groups_headers": group_headers,
         "groups_tables": group_tables,
     }
@@ -73,8 +75,13 @@ def one_group_table_view(request, group_name, *,
     except Group.DoesNotExist as group_no_exist:
         raise Http404(NON_EXISTING_GROUP_ERROR_MESSAGE) from group_no_exist
 
+    group_header = render_result_table_header(group)
+    group_table = render_result_table_content(group)
+
     context = {
         "cup_number": cup_number,
         "group_name": group.name,
+        "group_header": group_header,
+        "group_table": group_table,
     }
     return render(request, "codenames/one_group_table.html", context)
