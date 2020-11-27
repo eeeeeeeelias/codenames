@@ -17,6 +17,9 @@ from .consts import MAX_ARENAS_NUMBER
 from .consts import get_non_auto_score_string
 
 
+DUMMY_STRING_REPRESENTATION = "---------"
+
+
 class Cup(models.Model):
     """
     Fields:
@@ -73,11 +76,17 @@ class Group(models.Model):
         return f"{self.cup}, group {self.name}"
 
     def __str__(self):
+        if self.dummy:
+            return DUMMY_STRING_REPRESENTATION
         return self.long
 
 
-def get_dummy_group_id():
-    return Group.objects.get_or_create(name="Z", dummy=True)[0].id
+def get_dummy_group() -> Group:
+    return Group.objects.get_or_create(name="Z", dummy=True)[0]
+
+
+def get_dummy_group_id() -> int:
+    return get_dummy_group().id
 
 
 class Player(models.Model):
@@ -108,21 +117,29 @@ class Player(models.Model):
         return f'{self.last_name.capitalize()} {self.first_name.capitalize()}'
 
     def __str__(self):
+        if self.dummy:
+            return DUMMY_STRING_REPRESENTATION
         return self.long
 
 
-def get_dummy_player_id():
+def get_dummy_player() -> Player:
     return Player.objects.get_or_create(first_name="$Name",
                                         last_name="$No",
-                                        dummy=True
-                                        )[0].id
+                                        dummy=True)[0]
 
 
-def get_another_dummy_player_id():
+def get_dummy_player_id() -> int:
+    return get_dummy_player().id
+
+
+def get_another_dummy_player() -> Player:
     return Player.objects.get_or_create(first_name="$Suchplayer",
                                         last_name="$No",
-                                        dummy=True
-                                        )[0].id
+                                        dummy=True)[0]
+
+
+def get_another_dummy_player_id() -> int:
+    return get_another_dummy_player().id
 
 
 class Team(models.Model):
@@ -130,7 +147,7 @@ class Team(models.Model):
     Fields:
     ->first_player
     [->second_player]
-    [->group]
+    ->group
     ->cup
     is_paid
     [has_come]
@@ -203,15 +220,21 @@ class Team(models.Model):
         return f"{self.first_player.long}/{self.second_player.long}"
 
     def __str__(self):
+        if self.dummy:
+            return DUMMY_STRING_REPRESENTATION
         return self.long
 
 
-def get_dummy_team_id():
+def get_dummy_team() -> Team:
     return Team.objects.get_or_create(
-        first_player=get_dummy_player_id(),
-        second_player=get_another_dummy_player_id(),
+        first_player=get_dummy_player(),
+        second_player=get_another_dummy_player(),
         dummy=True
-    )[0].id
+    )[0]
+
+
+def get_dummy_team_id() -> int:
+    return get_dummy_team().id
 
 
 class ResultType(models.Model):
@@ -292,6 +315,10 @@ class Arena(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(MAX_ARENAS_NUMBER)]
     )
 
+    dummy = models.BooleanField(
+        default=False
+    )
+
     room = models.CharField(blank=True, null=True, max_length=30)
 
     @property
@@ -303,11 +330,17 @@ class Arena(models.Model):
         return f"({self.group.cup}) {self.group.short}{self.number}"
 
     def __str__(self):
+        if self.dummy:
+            return DUMMY_STRING_REPRESENTATION
         return self.long
 
 
-def get_dummy_arena_id():
-    return Arena.objects.get_or_create(number=0, dummy=True)[0].id
+def get_dummy_arena() -> Arena:
+    return Arena.objects.get_or_create(number=0, dummy=True)[0]
+
+
+def get_dummy_arena_id() -> int:
+    return get_dummy_arena().id
 
 
 class GameResult(models.Model):
@@ -354,7 +387,7 @@ class GameResult(models.Model):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        related_name="result_type"
+        related_name="result_type",
     )
 
     round_number = models.IntegerField(
