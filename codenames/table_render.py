@@ -5,6 +5,8 @@ Rendering functions for future html tables
 import copy
 import typing as tp
 
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 
 from .consts import get_score_str
@@ -67,7 +69,7 @@ def render_result_table_header(group: Group) -> None:
 
 def get_gameresult_cell(game_result: GameResult,
                         *,
-                        words_difference,
+                        words_difference: tp.List[int],
                         is_team_home: bool) -> HtmlTableCell:
     """
     words_difference is in AND out!
@@ -83,13 +85,13 @@ def get_gameresult_cell(game_result: GameResult,
             # Do not count auto_win wd
             classes.append("auto_win")
         else:
-            words_difference["for"] += game_result.absolute_score
+            words_difference[0] += game_result.absolute_score
     else:
         # Lose
         if game_result.result_type.is_auto:
             classes.append("auto_lose")
         # Do count auto lose wd!
-        words_difference["against"] += game_result.absolute_score
+        words_difference[0] -= game_result.absolute_score
 
     return HtmlTableCell(
         classes=classes,
@@ -113,11 +115,12 @@ def get_row(seed, team, group, num_teams):
     away_loses = away_games.filter(result_type__in=home_win_result_types)
 
     result_subrow: tp.List[HtmlTableCell] = [
-        HtmlTableCell(class_=("itself_cell" if seed == rival_seed else None))
-                      for rival_seed in range(num_teams)
+        HtmlTableCell(
+            class_=("itself_cell" if seed == rival_seed else None)
+        ) for rival_seed in range(num_teams)
     ]
 
-    words_difference = {"for": 0, "against": 0}
+    words_difference: tp.List[int] = [0,]
 
     # TODO: process game results that are not is_finished
     for hg in home_games:
@@ -136,6 +139,14 @@ def get_row(seed, team, group, num_teams):
     won = home_wins.count() + away_wins.count()
     lost = home_loses.count() + away_loses.count()
 
+    home_fouls: int = home_games.aggregate(
+        fouls=Coalesce(Sum("home_team_fouls"), 0)
+    )["fouls"]
+    away_fouls: int = away_games.aggregate(
+        fouls=Coalesce(Sum("away_team_fouls"), 0)
+    )["fouls"]
+    fouls: int = home_fouls + away_fouls
+
     return [
         HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
         HtmlTableCell(class_="team_cell", content=f"{team.short}"),
@@ -145,10 +156,10 @@ def get_row(seed, team, group, num_teams):
         HtmlTableCell(class_="lost_cell", content=f"{lost}"),
         HtmlTableCell(
             class_="wd_cell",
-            content=f"{words_difference['for']-words_difference['against']:+}",
+            content=f"{words_difference[0]:+}".replace("+0", "0"),
             title="Words difference"),  # TODO: add wd getting
         # TODO: add fouls getting
-        HtmlTableCell(class_="fouls_cell", content=f"TODO"),
+        HtmlTableCell(class_="fouls_cell", content=f"{fouls}"),
     ]
 
 
