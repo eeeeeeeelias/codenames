@@ -29,12 +29,20 @@ th {
     width: 30px;
 }
 
-.gameresult_cell {
+.gameresult_cell, .played_cell, .won_cell, .lost_cell, .fouls_cell {
     text-align: center;
 }
 
-.auto_win, .auto_lose {
+.wd_cell {
+    text-align: right;
+}
+
+.auto_win {
     font-style: italic;
+    background-color: #8E8D8A;
+}
+
+.auto_lose {
     background-color: #8E8D8A;
 }
 
