@@ -27,7 +27,7 @@ HOME_TEAM_WORDS_NUMBER: int = 9
 AWAY_TEAM_WORDS_NUMBER: int = 8
 
 
-def get_non_auto_score_string(score: int) -> str:
+def get_score_str(score: int) -> str:
     """
     Get string with scores with colon
     :param score: negative int for away win, positive int for home win
@@ -38,7 +38,7 @@ def get_non_auto_score_string(score: int) -> str:
     return f"0:{-score}"
 
 
-SCORE_CHOICES = [(score, get_non_auto_score_string(score))
+SCORE_CHOICES = [(score, get_score_str(score))
                  for score in range(-HOME_TEAM_WORDS_NUMBER,
                                     AWAY_TEAM_WORDS_NUMBER + 1)]
 
