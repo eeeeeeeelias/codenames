@@ -15,6 +15,7 @@ from .consts import GROUP_NAMES, MAX_GROUP_SIZE
 from .consts import EARLY_FEE_SIZE, LATE_FEE_SIZE
 from .consts import SCORE_CHOICES
 from .consts import MAX_ARENAS_NUMBER
+from .consts import AWAY_TEAM_WORDS_NUMBER, HOME_TEAM_WORDS_NUMBER
 
 
 DUMMY_STRING_REPRESENTATION = "---------"
@@ -345,10 +346,12 @@ class GameResult(models.Model):
     ->group
     ->home_team
     ->away_team
-    ->arena
     [->result_type]
-    round_number
     score
+    round_number
+    ->arena
+    home_team_fouls
+    away_team_fouls
     """
 
     group = models.ForeignKey(
@@ -371,13 +374,6 @@ class GameResult(models.Model):
         related_name="away_team"
     )
 
-    arena = models.ForeignKey(
-        Arena,
-        default=get_dummy_arena_id,
-        on_delete=models.CASCADE,
-        related_name="arena",
-    )
-
     result_type = models.ForeignKey(
         ResultType,
         null=True,
@@ -386,17 +382,35 @@ class GameResult(models.Model):
         related_name="result_type",
     )
 
-    round_number = models.IntegerField(
-        validators=[MinValueValidator(0),
-                    MaxValueValidator(MAX_GROUP_SIZE - 1)]
-    )
-
     # 4 == home team 4:0 away_team
     # -7 == home_team 0:7 away_team
     # 0 == auto result_type
     score = models.IntegerField(
         default=0,
         choices=SCORE_CHOICES
+    )
+
+    round_number = models.IntegerField(
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(MAX_GROUP_SIZE - 1)]
+    )
+
+    arena = models.ForeignKey(
+        Arena,
+        default=get_dummy_arena_id,
+        on_delete=models.CASCADE,
+        related_name="arena",
+    )
+
+    home_team_fouls = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(AWAY_TEAM_WORDS_NUMBER)]
+    )
+    away_team_fouls = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(HOME_TEAM_WORDS_NUMBER)]
     )
 
     @property
