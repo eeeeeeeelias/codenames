@@ -5,6 +5,7 @@ Console command to add teams (and players contained) to db.
 import typing as tp
 
 from django.core.management.base import BaseCommand
+
 from codenames.consts import CURRENT_CUP_NUMBER
 from codenames.models import Group, Player, Team
 from codenames.models import get_dummy_group_id

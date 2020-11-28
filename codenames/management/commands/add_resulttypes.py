@@ -3,8 +3,8 @@ Console command to add constant result types to db.
 """
 
 from django.core.management.base import BaseCommand
-from codenames.models import ResultType
 
+from codenames.models import ResultType
 from ._game_results import RESULT_TYPES
 
 

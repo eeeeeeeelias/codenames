@@ -5,6 +5,7 @@ Console command to add players to db.
 import typing as tp
 
 from django.core.management.base import BaseCommand
+
 from codenames.models import Player
 
 PLAYERS_DELIMITER = " - "
