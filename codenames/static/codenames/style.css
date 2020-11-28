@@ -29,12 +29,8 @@ th {
     width: 30px;
 }
 
-.gameresult_cell, .played_cell, .won_cell, .lost_cell, .fouls_cell {
+.gameresult_cell, .played_cell, .won_cell, .lost_cell, .fouls_cell, .wd_cell {
     text-align: center;
-}
-
-.wd_cell {
-    text-align: right;
 }
 
 .auto_win {
@@ -48,4 +44,8 @@ th {
 
 .itself_cell {
     background-color: #202020;
+}
+
+.scheduled {
+    font-size: small;
 }
