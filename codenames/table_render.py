@@ -78,6 +78,13 @@ def get_gameresult_cell(game_result: GameResult,
     words_difference is in AND out!
     """
     title: tp.Optional[str] = None
+    if not game_result.is_finished:
+        return HtmlTableCell(
+            classes=["scheduled"],
+            content=game_result.schedule,
+            title="Game haven't finished yet"
+        )
+
     if game_result.result_type.is_auto:
         title = game_result.result_type.description
 
@@ -146,7 +153,7 @@ def get_row(seed, team, group, num_teams):
     home_games = GameResult.objects.filter(home_team=team, group=group)
     away_games = GameResult.objects.filter(away_team=team, group=group)
 
-    words_difference: tp.List[int] = [0, ]
+    words_difference: tp.List[int] = [0]
 
     # TODO: process game results that are not is_finished
     for game in home_games:
@@ -178,7 +185,7 @@ def get_row(seed, team, group, num_teams):
         HtmlTableCell(class_="lost_cell", content=f"{games_lost}"),
         HtmlTableCell(
             class_="wd_cell",
-            content=f"{words_difference[0]:+}".replace("+0", "0"),
+            content=f"{words_difference[0]: }",
             title="Words difference"),  # TODO: add wd getting
         # TODO: add fouls getting
         HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
