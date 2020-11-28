@@ -11,7 +11,7 @@
     <tr>
         {% for cell in group_header %}
         <th {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
-            <div {% if cell.title %}title="{{cell.title}}"{% endif %}>
+            <div {% if cell.title %}title="{{ cell.title }}"{% endif %}>
                 {{ cell.content }}
             </div>
         </th>
@@ -21,7 +21,7 @@
     <tr>
         {% for cell in row %}
         <td {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
-            <div {% if cell.title %}title="{{cell.title}}"{% endif %} class="hey">
+            <div {% if cell.title %}title="{{ cell.title }}"{% endif %} class="hey">
                 {{ cell.content }}
             </div>
         </td>
@@ -29,5 +29,43 @@
     </tr>
     {% endfor %}
     </table>
+
+    <br>
+
+    {% if upcoming_games %}
+    <div>
+        Upcoming games:
+        {% for round in upcoming_games %}
+            <div>
+                <p>
+                    Round {{ round.0 }}:
+                </p>
+                <ul>
+                    {% for game in round.1 %}
+                    <li>{{ game.scheduled_long }}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if recent_games %}
+    <div>
+        Recent games:
+        {% for round in recent_games %}
+            <div>
+                <p>
+                    Round {{ round.0 }}:
+                </p>
+                <ul>
+                    {% for game in round.1 %}
+                    <li>{{ game.finished_long }}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </body>
 </html>

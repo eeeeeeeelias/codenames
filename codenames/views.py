@@ -13,6 +13,7 @@ from .consts import CURRENT_CUP_NUMBER
 from .models import Cup, Group
 from .table_render import render_result_table_content
 from .table_render import render_result_table_header
+from .table_render import get_recent_games_schedule, get_upcoming_games_schedule
 
 
 NON_EXISTING_CUP_ERROR_MESSAGE = _("There is no such cup")
@@ -80,10 +81,15 @@ def one_group_table_view(request, group_name, *,
     group_header = render_result_table_header(group)
     group_table = render_result_table_content(group)
 
+    upcoming_games = get_upcoming_games_schedule(group)
+    recent_games = get_recent_games_schedule(group)
+
     context = {
         "cup_number": cup_number,
         "group_name": group.name,
         "group_header": group_header,
         "group_table": group_table,
+        "upcoming_games": upcoming_games,
+        "recent_games": recent_games,
     }
     return render(request, "codenames/one_group_table.html", context)

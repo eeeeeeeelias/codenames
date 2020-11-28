@@ -208,3 +208,56 @@ def render_result_table_content(group: Group) -> None:
         team = teams[seed]
         result_table[seed] = get_row(seed, team, group, num_teams)
     return result_table
+
+
+# Number of rounds to show in "recent" and "upcoming"
+NUM_UPCOMING_ROUNDS: int = 2
+NUM_RECENT_ROUNDS: int = 2
+
+RoundSchedule = tp.Tuple[int, tp.List[GameResult]]
+
+
+def get_upcoming_games_schedule(
+        group: Group) -> tp.List[RoundSchedule]:
+    scheduled_group_games = [
+        gr for gr in GameResult.objects.filter(group=group)
+        if not gr.is_finished
+    ]
+    upcoming_rounds_numbers: tp.List[int] = sorted(
+        {gr.round_number for gr in scheduled_group_games}
+    )[:NUM_UPCOMING_ROUNDS]
+
+    upcoming_games_schedule: tp.List[RoundSchedule] = []
+    for round_number in upcoming_rounds_numbers:
+        round_upcoming_games = [
+            gr for gr in scheduled_group_games
+            if gr.round_number == round_number
+        ]
+        upcoming_games_schedule.append(
+            (f"{round_number + 1}", round_upcoming_games)
+        )
+
+    return upcoming_games_schedule
+
+
+def get_recent_games_schedule(
+        group: Group) -> tp.List[RoundSchedule]:
+    finished_group_games = [
+        gr for gr in GameResult.objects.filter(group=group)
+        if gr.is_finished
+    ]
+    recent_rounds_numbers: tp.List[int] = sorted(
+        {gr.round_number for gr in finished_group_games}
+    )[::-1][:NUM_RECENT_ROUNDS]
+
+    recent_games_schedule: tp.List[RoundSchedule] = []
+    for round_number in recent_rounds_numbers:
+        round_finished_games = [
+            gr for gr in finished_group_games
+            if gr.round_number == round_number
+        ]
+        recent_games_schedule.append(
+            (f"{round_number + 1}", round_finished_games)
+        )
+
+    return recent_games_schedule
