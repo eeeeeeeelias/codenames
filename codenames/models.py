@@ -428,11 +428,11 @@ class GameResult(models.Model):
         )
 
     @property
-    def upcoming_short(self) -> str:
+    def scheduled_short(self) -> str:
         return f"Round {self.round_number + 1}"
 
     @property
-    def upcoming_long(self) -> str:
+    def scheduled_long(self) -> str:
         return (
             f"{self.arena.short}: "
             f"{self.home_team.short} vs {self.away_team.short}"
@@ -442,7 +442,7 @@ class GameResult(models.Model):
         if not self.is_finished:
             return (
                 f"Round {self.round_number + 1}, "
-                + self.upcoming_long
+                + self.scheduled_long
             )
         return (
             f"Round {self.round_number + 1}: "
