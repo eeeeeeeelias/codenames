@@ -415,23 +415,39 @@ class GameResult(models.Model):
     )
 
     @property
-    def schedule(self) -> str:
+    def finished_long(self) -> str:
+        auto_result_type: str = (f" ({self.result_type.abbr[0]})"
+                                 if self.result_type.is_auto
+                                 else f"")
+        return (
+            f"{self.arena.short}: "
+            f"{self.home_team.short} "
+            f"{get_score_str(self.home_score)}"
+            f"{auto_result_type}"
+            f" {self.away_team.short}"
+        )
+
+    @property
+    def upcoming_short(self) -> str:
         return f"Round {self.round_number + 1}"
 
     @property
-    def long(self) -> str:
-        if not self.is_finished:
-            return (
-                f"Round {self.round_number + 1}, arena {self.arena.short}: "
-                f"{self.home_team.short} vs {self.away_team.short}"
-            )
+    def upcoming_long(self) -> str:
         return (
-            f"{self.home_team.short} {get_score_str(self.home_score)} "
-            f"({self.result_type.abbr}) {self.away_team.short}"
+            f"{self.arena.short}: "
+            f"{self.home_team.short} vs {self.away_team.short}"
         )
 
     def __str__(self):
-        return self.long
+        if not self.is_finished:
+            return (
+                f"Round {self.round_number + 1}, "
+                + self.upcoming_long
+            )
+        return (
+            f"Round {self.round_number + 1}: "
+            + self.finished_long
+        )
 
     @property
     def is_finished(self) -> bool:

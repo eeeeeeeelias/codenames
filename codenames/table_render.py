@@ -81,7 +81,7 @@ def get_gameresult_cell(game_result: GameResult,
     if not game_result.is_finished:
         return HtmlTableCell(
             classes=["scheduled"],
-            content=game_result.schedule,
+            content=game_result.upcoming_short,
             title="Game haven't finished yet"
         )
 
