@@ -18,7 +18,8 @@ from .consts import MAX_ARENAS_NUMBER
 from .consts import AWAY_TEAM_WORDS_NUMBER, HOME_TEAM_WORDS_NUMBER
 
 
-DUMMY_STRING_REPRESENTATION = "---------"
+DUMMY_STRING_REPRESENTATION: str = "---------"
+DUMMY_GROUP_NAME: str = "Z"
 
 
 class Cup(models.Model):
@@ -83,7 +84,7 @@ class Group(models.Model):
 
 
 def get_dummy_group() -> Group:
-    return Group.objects.get_or_create(name="Z", dummy=True)[0]
+    return Group.objects.get_or_create(name=DUMMY_GROUP_NAME, dummy=True)[0]
 
 
 def get_dummy_group_id() -> int:
