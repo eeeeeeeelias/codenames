@@ -10,6 +10,7 @@ from codenames.models import Arena, Group
 class Command(BaseCommand):
     """
     :usage: manage.py add_arenas
+    # TODO: add description
     """
     help = "Add arenas"
 

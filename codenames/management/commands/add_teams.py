@@ -15,17 +15,23 @@ from .add_players import PLAYERS_DELIMITER
 class Command(BaseCommand):
     """
     :usage: manage.py add_teams
+    # TODO: add description
     """
     help = "Add teams from file"
 
     def add_arguments(self, parser):
-        parser.add_argument("--txt", required=True, type=str)
+        parser.add_argument(
+            "--txt",
+            required=True,
+            action="store",
+            type=str)
         parser.add_argument(
             "--cup_number",
             action="store",
             default=CURRENT_CUP_NUMBER,
             type=int,
-            help=f"Cup number (default = {CURRENT_CUP_NUMBER})")
+            help=f"Cup number (default = {CURRENT_CUP_NUMBER})"
+        )
         # TODO: add csv read
         parser.add_argument(
             "-f", "--first_name_first",

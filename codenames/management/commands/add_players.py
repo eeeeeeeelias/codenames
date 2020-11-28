@@ -42,6 +42,7 @@ def add_one_player(player_line: str,
 class Command(BaseCommand):
     """
     :usage: manage.py add_players
+    # TODO: add description
     """
     help = "Add players from file"
 

@@ -11,6 +11,7 @@ from ._game_results import RESULT_TYPES
 class Command(BaseCommand):
     """
     :usage: manage.py add_resulttypes
+    # TODO: add description
     """
     help = "Add const game result types"
 
