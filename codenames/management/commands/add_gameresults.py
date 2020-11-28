@@ -11,6 +11,16 @@ from codenames.consts import CURRENT_CUP_NUMBER
 from codenames.models import Arena, GameResult, Group, Team
 
 
+def assert_correct_teams_seeds(teams) -> None:
+    teams_seeds = set()
+    for team in teams:
+        if team.seed is None:
+            raise CommandError(f"team {team} has no seed in group")
+        if team.seed in teams_seeds:
+            raise CommandError(f"More than one team with seed {team.seed}")
+        teams_seeds.add(team.seed)
+
+
 class Command(BaseCommand):
     """
     :usage: manage.py add_gameresults
@@ -38,52 +48,47 @@ class Command(BaseCommand):
             action="store",
             type=str,
         )
+        parser.add_argument(
+            "-n", "--num_teams",
+            required=True,
+            action="store",
+            type=int,
+        )
 
     def handle(self, *args, **options):
-        group_size: int = 8
-        rounds_number: int = (group_size
-                              if group_size % 2 != 0
-                              else group_size - 1)
-        arenas_number: int = group_size // 2
-
-        group_name: str = options["to_group"]
-        cup_number: int = options["cup_number"]
         try:
             dst_group: Group = Group.objects.get(
-                name=group_name,
-                cup__number=cup_number
+                name=options["to_group"],
+                cup__number=options["cup_number"]
             )
         except Group.DoesNotExist as group_no_exist:
             raise CommandError(
-                f"There is no group {group_name} on cup {cup_number}"
+                f"There is no group {options['to_group']} "
+                f"on cup {options['cup_number']}"
             ) from group_no_exist
+
+        group_size: int = options["num_teams"]
 
         group_teams = Team.objects.filter(group=dst_group)
         if group_teams.count() != group_size:
             raise CommandError(
                 f"{group_size} teams expected, got {group_teams.count()}")
 
-        teams_seeds = set()
-        for team in group_teams:
-            if team.seed is None:
-                raise CommandError(f"team {team} has no seed in group")
-            if team.seed in teams_seeds:
-                raise CommandError(f"More than one team with seed {team.seed}")
-            teams_seeds.add(team.seed)
-
-        group_arenas = dict(
-            zip(range(arenas_number),
-                Arena.objects.filter(group=dst_group).order_by("number"))
-        )
+        try:
+            assert_correct_teams_seeds(group_teams)
+        except CommandError as command_error:
+            raise command_error
 
         schedule_path = os.path.join(
             options["schedule_json_folder"],
             f"schedule_{(group_size + 1) // 2 * 2}.json"
         )
+
         with open(schedule_path, "r", encoding="utf-8") as json_src:
             schedule = json.load(json_src)
-        for round in range(rounds_number):
-            round_games = schedule[f"{round + 1}"]
+
+        for round_index in range(len(schedule)):
+            round_games = schedule[f"{round_index + 1}"]
 
             # TODO: add checking already existing game results
             for game in round_games:
@@ -91,8 +96,9 @@ class Command(BaseCommand):
                     group=dst_group,
                     home_team=group_teams.get(seed=game["first"] - 1),
                     away_team=group_teams.get(seed=game["second"] - 1),
-                    round_number=round,
-                    arena=group_arenas[game["seat"] - 1]
+                    round_number=round_index,
+                    arena=Arena.objects.filter(group=dst_group).order_by(
+                        "number")[game["seat"] - 1]
                 )
                 game_result.save()
                 print(f"GameResult {game_result} saved")
