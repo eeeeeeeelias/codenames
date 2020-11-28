@@ -7,13 +7,16 @@ import typing as tp
 
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
-from django.forms.models import model_to_dict
 
 from .consts import get_score_str
 from .models import GameResult, Group, ResultType, Team
 
 
 class HtmlTableCell:
+    """
+    Class that stores all information to pass to html table rendering.
+    """
+
     def __init__(self,
                  *,
                  class_: str = None,
@@ -101,65 +104,84 @@ def get_gameresult_cell(game_result: GameResult,
         title=title)
 
 
-def get_row(seed, team, group, num_teams):
-    home_games = GameResult.objects.filter(home_team=team, group=group)
-    away_games = GameResult.objects.filter(away_team=team, group=group)
-
+def count_game_results(home_finished_games,
+                       away_finished_games) -> tp.Tuple[int, int]:
+    """
+    :return: Tuple (won_count, lost_count)
+    """
     home_win_result_types = ResultType.objects.filter(is_home_win=True)
     away_win_result_types = ResultType.objects.filter(is_home_win=False)
-    played: int = home_games.count() + away_games.count()
 
-    home_wins = home_games.filter(result_type__in=home_win_result_types)
-    away_wins = away_games.filter(result_type__in=away_win_result_types)
-    home_loses = home_games.filter(result_type__in=away_win_result_types)
-    away_loses = away_games.filter(result_type__in=home_win_result_types)
+    home_wins = home_finished_games.filter(
+        result_type__in=home_win_result_types)
+    away_wins = away_finished_games.filter(
+        result_type__in=away_win_result_types)
+    home_loses = home_finished_games.filter(
+        result_type__in=away_win_result_types)
+    away_loses = away_finished_games.filter(
+        result_type__in=home_win_result_types)
 
+    return (home_wins.count() + away_wins.count(),
+            home_loses.count() + away_loses.count())
+
+
+def count_fouls(home_finished_games, away_finished_games) -> int:
+    home_fouls: int = home_finished_games.aggregate(
+        fouls=Coalesce(Sum("home_team_fouls"), 0)
+    )["fouls"]
+    away_fouls: int = away_finished_games.aggregate(
+        fouls=Coalesce(Sum("away_team_fouls"), 0)
+    )["fouls"]
+
+    return home_fouls + away_fouls
+
+
+def get_row(seed, team, group, num_teams):
     result_subrow: tp.List[HtmlTableCell] = [
         HtmlTableCell(
             class_=("itself_cell" if seed == rival_seed else None)
         ) for rival_seed in range(num_teams)
     ]
 
-    words_difference: tp.List[int] = [0,]
+    home_games = GameResult.objects.filter(home_team=team, group=group)
+    away_games = GameResult.objects.filter(away_team=team, group=group)
+
+    words_difference: tp.List[int] = [0, ]
 
     # TODO: process game results that are not is_finished
-    for hg in home_games:
-        rival_seed = hg.away_team.seed
+    for game in home_games:
+        rival_seed = game.away_team.seed
         result_subrow[rival_seed] = get_gameresult_cell(
-            hg,
+            game,
             is_team_home=True,
             words_difference=words_difference)
-    for ag in away_games:
-        rival_seed = ag.home_team.seed
+    for game in away_games:
+        rival_seed = game.home_team.seed
         result_subrow[rival_seed] = get_gameresult_cell(
-            ag,
+            game,
             is_team_home=False,
             words_difference=words_difference)
 
-    won = home_wins.count() + away_wins.count()
-    lost = home_loses.count() + away_loses.count()
+    games_won: int
+    games_lost: int
+    games_won, games_lost = count_game_results(home_games, away_games)
+    games_played: int = games_won + games_lost
 
-    home_fouls: int = home_games.aggregate(
-        fouls=Coalesce(Sum("home_team_fouls"), 0)
-    )["fouls"]
-    away_fouls: int = away_games.aggregate(
-        fouls=Coalesce(Sum("away_team_fouls"), 0)
-    )["fouls"]
-    fouls: int = home_fouls + away_fouls
+    num_fouls: int = count_fouls(home_games, away_games)
 
     return [
         HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
         HtmlTableCell(class_="team_cell", content=f"{team.short}"),
         *result_subrow,
-        HtmlTableCell(class_="played_cell", content=f"{played}"),
-        HtmlTableCell(class_="won_cell", content=f"{won}"),
-        HtmlTableCell(class_="lost_cell", content=f"{lost}"),
+        HtmlTableCell(class_="played_cell", content=f"{games_played}"),
+        HtmlTableCell(class_="won_cell", content=f"{games_won}"),
+        HtmlTableCell(class_="lost_cell", content=f"{games_lost}"),
         HtmlTableCell(
             class_="wd_cell",
             content=f"{words_difference[0]:+}".replace("+0", "0"),
             title="Words difference"),  # TODO: add wd getting
         # TODO: add fouls getting
-        HtmlTableCell(class_="fouls_cell", content=f"{fouls}"),
+        HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
     ]
 
 
