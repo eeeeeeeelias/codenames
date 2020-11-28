@@ -415,7 +415,16 @@ class GameResult(models.Model):
     )
 
     @property
+    def schedule(self) -> str:
+        return f"Round {self.round_number + 1}"
+
+    @property
     def long(self) -> str:
+        if not self.is_finished:
+            return (
+                f"Round {self.round_number + 1}, arena {self.arena.short}: "
+                f"{self.home_team.short} vs {self.away_team.short}"
+            )
         return (
             f"{self.home_team.short} {get_score_str(self.home_score)} "
             f"({self.result_type.abbr}) {self.away_team.short}"
