@@ -69,23 +69,16 @@ class Command(BaseCommand):
 
                 team: tp.Optional[Team] = None
                 is_team_new: bool = False
-                existing_teams = Team.objects.filter(
-                    first_player=players[0],
-                    second_player=players[1],
+                this_cup_teams = Team.objects.filter(
                     cup__number=options["cup_number"])
-                if existing_teams:
-                    team = existing_teams.first()
+                already_existing_teams = (this_cup_teams.filter(
+                    first_player=players[0], second_player=players[1])
+                    | this_cup_teams.filter(
+                        first_player=players[1], second_player=players[0]))
+                if already_existing_teams:
+                    team = already_existing_teams.first()
                     self.stdout.write(
                         f"Team {players[0]}/{players[1]} already exists")
-                if not team:
-                    existing_teams = Team.objects.filter(
-                        first_player=players[1],
-                        second_player=players[0],
-                        cup__number=options["cup_number"])
-                    if existing_teams:
-                        team = existing_teams.first()
-                        self.stdout.write(
-                            f"Team {players[1]}/{players[0]} already exists")
 
                 if not team:
                     team = Team(first_player=players[0],
