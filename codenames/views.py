@@ -2,6 +2,8 @@
 Views for codenames app.
 """
 
+import typing as tp
+
 from django.http import Http404
 from django.shortcuts import render
 from django.template.defaulttags import register
@@ -45,7 +47,7 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
     except Cup.DoesNotExist as cup_no_exist:
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
     cup_groups = Group.objects.filter(cup__number=cup_number, dummy=False)
-    group_names = sorted(cg.name for cg in cup_groups)
+    group_names: tp.List[str] = sorted(cg.name for cg in cup_groups)
     print(group_names)
     group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
                      for gn in group_names}
@@ -54,7 +56,7 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
 
     context = {
         "cup_number": cup.number,
-        "group_name": group.name,
+        "group_names": group_names,
         "groups_headers": group_headers,
         "groups_tables": group_tables,
     }
