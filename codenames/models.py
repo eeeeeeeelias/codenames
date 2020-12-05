@@ -16,10 +16,7 @@ from .consts import EARLY_FEE_SIZE, LATE_FEE_SIZE
 from .consts import SCORE_CHOICES
 from .consts import MAX_ARENAS_NUMBER
 from .consts import AWAY_TEAM_WORDS_NUMBER, HOME_TEAM_WORDS_NUMBER
-
-
-DUMMY_STRING_REPRESENTATION: str = "---------"
-DUMMY_GROUP_NAME: str = "Z"
+from .consts import DUMMY_GROUP_NAME, DUMMY_STRING_REPRESENTATION
 
 
 class Cup(models.Model):
@@ -418,7 +415,7 @@ class GameResult(models.Model):
     def finished_long(self) -> str:
         auto_result_type: str = (f" ({self.result_type.abbr[0]})"
                                  if self.result_type.is_auto
-                                 else f"")
+                                 else "")
         return (
             f"{self.arena.short}: "
             f"{self.home_team.short} "

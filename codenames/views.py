@@ -10,7 +10,8 @@ from django.template.defaulttags import register
 from django.utils.translation import gettext_lazy as _
 
 from .consts import CURRENT_CUP_NUMBER
-from .models import Cup, Group
+from .forms import AddResultForm
+from .models import Cup, GameResult, Group
 from .table_render import render_result_table_content
 from .table_render import render_result_table_header
 from .table_render import get_recent_games_schedule, get_upcoming_games_schedule
@@ -93,3 +94,45 @@ def one_group_table_view(request, group_name, *,
         "recent_games": recent_games,
     }
     return render(request, "codenames/one_group_table.html", context)
+
+
+def get_games_choices(group_name: str):
+    games_list = sorted(
+        GameResult.objects.filter(group__name=group_name),
+        key=lambda x: (x.is_finished, x.round_number))
+    return [
+        (game.id, game) for game in games_list
+    ]
+
+
+
+def add_result(request, group_name: str):
+    last_add_result: tp.Optional[str] = None
+    if request.method == "POST":
+        print('request.method == "POST"')
+        form = AddResultForm(request.POST,
+                             games_choices=get_games_choices(group_name))
+        if form.is_valid():
+            data = request.POST
+            print(data)
+            GameResult.objects.filter(id=int(data["game"])).update(
+                result_type=data["result_type"],
+                score=data["score"],
+                home_team_fouls=data["home_team_fouls"],
+                away_team_fouls=data["away_team_fouls"],
+            )
+            last_add_result = _("Result added successfully!")
+            form = AddResultForm(games_choices=get_games_choices(group_name))
+        else:
+            last_add_result = _("Failed to add result!")
+    elif request.method == "GET" or form.is_valid():
+        print('request.method == "GET" or form.is_valid()')
+        form = AddResultForm(games_choices=get_games_choices(group_name))
+
+
+    context = {
+        "group_name": group_name,
+        "last_add_result": last_add_result,
+        "form": form,
+    }
+    return render(request, "codenames/add_result.html", context)

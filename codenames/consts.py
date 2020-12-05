@@ -23,9 +23,14 @@ TIME_AUTO_SCORE = 4
 SERIOUS_FOUL_AUTO_SCORE = 8
 ABSENCE_AUTO_SCORE = 8
 
-HOME_TEAM_WORDS_NUMBER: int = 9
-AWAY_TEAM_WORDS_NUMBER: int = 8
 
+MAX_ARENAS_NUMBER: int = 10
+
+EARLY_FEE_SIZE: int = 700
+LATE_FEE_SIZE: int = 900
+
+DUMMY_STRING_REPRESENTATION: str = "---------"
+DUMMY_GROUP_NAME: str = "Z"
 
 def get_score_str(score: int) -> str:
     """
@@ -33,16 +38,15 @@ def get_score_str(score: int) -> str:
     :param score: negative int for away win, positive int for home win
     :return: string with score
     """
-    if score >= 0:
+    if score == 0:
+        return DUMMY_STRING_REPRESENTATION
+    if score > 0:
         return f"{score}:0"
     return f"0:{-score}"
 
+HOME_TEAM_WORDS_NUMBER: int = 9
+AWAY_TEAM_WORDS_NUMBER: int = 8
 
 SCORE_CHOICES = [(score, get_score_str(score))
                  for score in range(-HOME_TEAM_WORDS_NUMBER,
                                     AWAY_TEAM_WORDS_NUMBER + 1)]
-
-MAX_ARENAS_NUMBER: int = 10
-
-EARLY_FEE_SIZE: int = 700
-LATE_FEE_SIZE: int = 900
