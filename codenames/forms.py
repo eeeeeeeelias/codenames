@@ -24,7 +24,10 @@ class AddResultForm(forms.Form):
 
     result_type = forms.ModelChoiceField(
         label=_("Choose result type"),
-        queryset=ResultType.objects.all()
+        queryset=ResultType.objects.all(),
+        widget=forms.Select(
+            attrs={"onchange": "updateScoreFieldState();"}
+        )
     )
 
     score = forms.CharField(

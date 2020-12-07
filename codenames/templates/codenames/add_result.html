@@ -44,5 +44,19 @@
             </div>
         </form>
     </div>
+
+<script>
+function updateScoreFieldState() {
+    var value = document.getElementById("id_result_type").value;
+    <!-- console.log(value) -->
+    if (value <= 2)  <!-- TODO -->
+    {
+        document.getElementById("id_score").disabled = false;
+    } else {
+        document.getElementById("id_score").disabled = true;
+    }
+}
+</script>
+
 </body>
 </html>
