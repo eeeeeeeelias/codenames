@@ -143,7 +143,35 @@ def count_fouls(home_finished_games, away_finished_games) -> int:
     return home_fouls + away_fouls
 
 
-def get_row(seed, team, group, num_teams):
+TIE_BREAKERS_ORDER = [
+    "won",
+    "optional_won_between",
+    "absences",
+    "serious_fouls",
+    "fouls",
+    "black_loses",
+    "optional_black_loses_between",
+    "words_difference",
+    "optional_words_difference_between",
+    "games_played",
+]
+
+
+TIE_BREAKERS_WEIGHTS = {
+    "won": +1,
+    "optional_won_between": +1,
+    "absences": -1,
+    "serious_fouls": -1,
+    "fouls": -1,
+    "black_loses": -1,
+    "optional_black_loses_between": -1,
+    "words_difference": +1,
+    "optional_words_difference_between": +1,
+    "games_played": +1,
+}
+
+
+def get_row(seed, team, group, num_teams, tie_breakers):
     result_subrow: tp.List[HtmlTableCell] = [
         HtmlTableCell(
             class_=("itself_cell" if seed == rival_seed else None)
@@ -155,7 +183,6 @@ def get_row(seed, team, group, num_teams):
 
     words_difference: tp.List[int] = [0]
 
-    # TODO: process game results that are not is_finished
     for game in home_games:
         rival_seed = game.away_team.seed
         result_subrow[rival_seed] = get_gameresult_cell(
@@ -176,6 +203,26 @@ def get_row(seed, team, group, num_teams):
 
     num_fouls: int = count_fouls(home_games, away_games)
 
+    tie_breakers["won"] = games_won
+    tie_breakers["absences"] = (
+        home_games.filter(result_type__abbr="A2").count()
+        + away_games.filter(result_type__abbr="A1").count()
+    )
+    tie_breakers["serious_fouls"] = (
+        home_games.filter(result_type__abbr="F2").count()
+        + away_games.filter(result_type__abbr="F1").count()
+    )
+    tie_breakers["fouls"] = num_fouls
+    tie_breakers["black_loses"] = (
+        home_games.filter(result_type__abbr="B2").count()
+        + away_games.filter(result_type__abbr="B1").count()
+    )
+    tie_breakers["words_difference"] = words_difference[0]
+    tie_breakers["games_played"] = games_played
+
+    for key in tie_breakers.keys():
+        tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
+
     return [
         HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
         HtmlTableCell(class_="team_cell", content=f"{team.short}"),
@@ -186,8 +233,7 @@ def get_row(seed, team, group, num_teams):
         HtmlTableCell(
             class_="wd_cell",
             content=f"{words_difference[0]: }",
-            title="Words difference"),  # TODO: add wd getting
-        # TODO: add fouls getting
+            title="Words difference"),
         HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
     ]
 
@@ -204,9 +250,18 @@ def render_result_table_content(group: Group) -> None:
     }
 
     result_table = [None for seed in range(num_teams)]
+    # TODO: add getting of optional tie breakers
+    # like "optional_won_between",
+    # "optional_black_loses_between",
+    # "optional_words_difference_between".
+    tie_breakers = [{} for seed in range(num_teams)]
     for seed in range(num_teams):
         team = teams[seed]
-        result_table[seed] = get_row(seed, team, group, num_teams)
+        result_table[seed] = get_row(
+            seed, team, group, num_teams, tie_breakers[seed])
+    print(tie_breakers)
+    # TODO: add place-giving process
+
     return result_table
 
 
@@ -229,10 +284,13 @@ def get_upcoming_games_schedule(
 
     upcoming_games_schedule: tp.List[RoundSchedule] = []
     for round_number in upcoming_rounds_numbers:
-        round_upcoming_games = [
-            gr for gr in scheduled_group_games
-            if gr.round_number == round_number
-        ]
+        round_upcoming_games = sorted(
+            [
+                gr for gr in scheduled_group_games
+                if gr.round_number == round_number
+            ],
+            key=lambda game: game.arena.short
+        )
         upcoming_games_schedule.append(
             (f"{round_number + 1}", round_upcoming_games)
         )
@@ -252,10 +310,13 @@ def get_recent_games_schedule(
 
     recent_games_schedule: tp.List[RoundSchedule] = []
     for round_number in recent_rounds_numbers:
-        round_finished_games = [
-            gr for gr in finished_group_games
-            if gr.round_number == round_number
-        ]
+        round_finished_games = sorted(
+            [
+                gr for gr in finished_group_games
+                if gr.round_number == round_number
+            ],
+            key=lambda game: game.arena.short
+        )
         recent_games_schedule.append(
             (f"{round_number + 1}", round_finished_games)
         )
