@@ -2,13 +2,13 @@
 Urls for codenames app.
 """
 
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 app_name = "codenames"
 
 urlpatterns = [
-    # TODO: add re_path for .../A/
+    re_path(r"^(?P<group_name>[A-Za-z])/$", views.one_group_table_view, name="one_group_table"),
     path("", views.start_view, name="index"),
     path("results/", views.all_groups_tables_view, name="all_groups_tables"),
     path("<str:group_name>/results/",
