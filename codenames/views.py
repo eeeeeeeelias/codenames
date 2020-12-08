@@ -65,10 +65,6 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         for gn in group_names
     }
 
-    for k, v in group_headers.items():
-        print(k)
-        print(v)
-
     context = {
         "cup_number": cup.number,
         "group_names": group_names,
