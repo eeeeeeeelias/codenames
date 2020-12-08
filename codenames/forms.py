@@ -1,3 +1,8 @@
+"""
+Forms for codenames web app:
+- AddResultForm
+"""
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +13,9 @@ from .models import ResultType
 
 
 class AddResultForm(forms.Form):
+    """
+    Form to add result of one game.
+    """
     def __init__(self, *args, **kwargs):
         if "games_choices" in kwargs:
             games_choices = kwargs.pop("games_choices")
