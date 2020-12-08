@@ -145,10 +145,14 @@ def add_result(request, group_name: str):
     auto_result_ids: tp.List[int] = [
         rt.id for rt in ResultType.objects.all() if rt.is_auto
     ]
+    absence_result_ids: tp.List[int] = [
+        rt.id for rt in ResultType.objects.all() if rt.abbr.startswith("A")
+    ]
     context = {
         "group_name": group_name,
         "last_add_result": last_add_result,
         "form": form,
-        "auto_result_ids": auto_result_ids,
+        "ids_to_hide_score": auto_result_ids,
+        "ids_to_hide_fouls": absence_result_ids,
     }
     return render(request, "codenames/add_result.html", context)

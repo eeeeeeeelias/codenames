@@ -48,18 +48,41 @@
     </div>
 
 <script>
-function updateScoreFieldState() {
-    var auto_result_ids = {{ auto_result_ids }};
+function updateFieldsStates() {
+    var ids_to_hide_score = {{ ids_to_hide_score }};
+    var ids_to_hide_fouls = {{ ids_to_hide_fouls }};
     var result_id = Number(document.getElementById("id_result_type").value);
-    if (auto_result_ids.indexOf(result_id) != -1)
+    var score_field = document.getElementById("id_score");
+    var score_label = document.getElementById("label_id_score");
+    if (ids_to_hide_score.indexOf(result_id) != -1)
     {
-        document.getElementById("id_score").style.visibility = "hidden";
-        document.getElementById("label_id_score").style.visibility = "hidden";
-        document.getElementById("id_score").value = 0;
+        score_field.style.visibility = "hidden";
+        score_label.style.visibility = "hidden";
+        score_field.value = 0;
     } else {
-        document.getElementById("id_score").style.visibility = "visible"
-        document.getElementById("label_id_score").style.visibility = "visible"
-        document.getElementById("id_score").value = 0;
+        score_field.style.visibility = "visible"
+        score_label.style.visibility = "visible"
+        score_field.value = 0;
+    }
+    var home_fouls_field = document.getElementById("id_home_team_fouls");
+    var home_fouls_label = document.getElementById("label_id_home_team_fouls");
+    var away_fouls_field = document.getElementById("id_away_team_fouls");
+    var away_fouls_label = document.getElementById("label_id_away_team_fouls");
+    if (ids_to_hide_fouls.indexOf(result_id) != -1)
+    {
+        home_fouls_field.style.visibility = "hidden";
+        home_fouls_label.style.visibility = "hidden";
+        home_fouls_field.value = 0;
+
+        away_fouls_field.style.visibility = "hidden";
+        away_fouls_label.style.visibility = "hidden";
+        away_fouls_field.value = 0;
+    } else {
+        home_fouls_field.style.visibility = "visible"
+        home_fouls_label.style.visibility = "visible"
+
+        away_fouls_field.style.visibility = "visible"
+        away_fouls_label.style.visibility = "visible"
     }
 }
 </script>

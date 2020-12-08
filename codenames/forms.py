@@ -34,7 +34,7 @@ class AddResultForm(forms.Form):
         label=_("Choose result type:"),
         queryset=ResultType.objects.all(),
         widget=forms.Select(
-            attrs={"onchange": "updateScoreFieldState();"}
+            attrs={"onchange": "updateFieldsStates();"}
         )
     )
 
