@@ -2,14 +2,13 @@
 Console command to add empty game results for some group.
 """
 
-import json
 import os
 
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from codenames.consts import CURRENT_CUP_NUMBER
-from codenames.models import Arena, GameResult, Group, Team
+from codenames.models import GameResult, Group
 
 
 def assert_correct_teams_seeds(teams) -> None:
