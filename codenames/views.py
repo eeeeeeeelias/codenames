@@ -70,6 +70,7 @@ def one_group_table_view(request, group_name, *,
     """
     View with table of one group.
     """
+    group_name = group_name.upper()
     try:
         Cup.objects.get(number=cup_number)
     except Cup.DoesNotExist as cup_no_exist:
