@@ -50,7 +50,7 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         raise Http404(NON_EXISTING_CUP_ERROR_MESSAGE) from cup_no_exist
     cup_groups = Group.objects.filter(cup__number=cup_number, dummy=False)
     group_names: tp.List[str] = sorted(cg.name for cg in cup_groups)
-    print(group_names)
+
     group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
                      for gn in group_names}
     group_tables = {gn: render_result_table_content(cup_groups.get(name=gn))

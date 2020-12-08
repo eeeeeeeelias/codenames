@@ -475,13 +475,17 @@ class GameResult(models.Model):
         return -self.score
 
     def clean(self):
+        if self.result_type is None:
+            if self.score != 0:
+                raise ValidationError(_("please choose result type"))
+            return
         if self.result_type.is_auto and self.score != 0:
-            raise ValidationError(_('do not choose score for auto end game'))
+            raise ValidationError(_("do not choose score for auto end game"))
         if not self.result_type.is_auto and self.score == 0:
-            raise ValidationError(_('choose score for non-auto end game'))
+            raise ValidationError(_("choose score for non-auto end game"))
         if self.result_type.is_home_win and self.score < 0:
             raise ValidationError(
-                _('home team won: chosen score says the opposite'))
+                _("home team won: chosen score says the opposite"))
         if self.result_type.is_away_win and self.score > 0:
             raise ValidationError(
-                _('away team won: chosen score says the opposite'))
+                _("away team won: chosen score says the opposite"))
