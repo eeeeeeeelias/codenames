@@ -3,12 +3,73 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title></title>
+    <meta http-equiv="refresh" content="60; URL={% url 'codenames:all_groups_tables' %}">
+    <title>Результаты группового этапа</title>
     <link rel="stylesheet" type="text/css" href="{% static 'codenames/style.css' %}">
 </head>
 <body>
-    <p>
-        Coming soon: results of Cup {{ cup_number }}
-    </p>
+    {% for group_name in group_names %}
+        <div>Группа {{ group_name }}</div><br>
+        <table>
+        <tr>
+            {% for cell in groups_headers|get_item:group_name %}
+            <th {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
+                <div {% if cell.title %}title="{{ cell.title }}"{% endif %}>
+                    {{ cell.content }}
+                </div>
+            </th>
+            {% endfor %}
+        </tr>
+        {% for row in groups_tables|get_item:group_name %}
+        <tr>
+            {% for cell in row %}
+            <td {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
+                <div {% if cell.title %}title="{{ cell.title }}"{% endif %} class="hey">
+                    {{ cell.content }}
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </table>
+
+        <br>
+
+        {% if upcoming_games|get_item:group_name %}
+        <div>
+            Upcoming games:
+            {% for round in upcoming_games|get_item:group_name %}
+                <div>
+                    <p>
+                        Round {{ round.0 }}:
+                    </p>
+                    <ul>
+                        {% for game in round.1 %}
+                        <li>{{ game.scheduled_long }}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if recent_games|get_item:group_name %}
+        <div>
+            Recent games:
+            {% for round in recent_games|get_item:group_name %}
+                <div>
+                    <p>
+                        Round {{ round.0 }}:
+                    </p>
+                    <ul>
+                        {% for game in round.1 %}
+                        <li>{{ game.finished_long }}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endfor %}
 </body>
 </html>

@@ -56,11 +56,26 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
     group_tables = {gn: render_result_table_content(cup_groups.get(name=gn))
                     for gn in group_names}
 
+    upcoming_games_lists = {
+        gn: get_upcoming_games_schedule(cup_groups.get(name=gn))
+        for gn in group_names
+    }
+    recent_games_lists = {
+        gn: get_recent_games_schedule(cup_groups.get(name=gn))
+        for gn in group_names
+    }
+
+    for k, v in group_headers.items():
+        print(k)
+        print(v)
+
     context = {
         "cup_number": cup.number,
         "group_names": group_names,
         "groups_headers": group_headers,
         "groups_tables": group_tables,
+        "upcoming_games": upcoming_games_lists,
+        "recent_games": recent_games_lists,
     }
     return render(request, "codenames/all_groups_tables.html", context)
 
@@ -83,16 +98,16 @@ def one_group_table_view(request, group_name, *,
     group_header = render_result_table_header(group)
     group_table = render_result_table_content(group)
 
-    upcoming_games = get_upcoming_games_schedule(group)
-    recent_games = get_recent_games_schedule(group)
+    upcoming_games_list = get_upcoming_games_schedule(group)
+    recent_games_list = get_recent_games_schedule(group)
 
     context = {
         "cup_number": cup_number,
         "group_name": group.name,
         "group_header": group_header,
         "group_table": group_table,
-        "upcoming_games": upcoming_games,
-        "recent_games": recent_games,
+        "upcoming_games": upcoming_games_list,
+        "recent_games": recent_games_list,
     }
     return render(request, "codenames/one_group_table.html", context)
 
