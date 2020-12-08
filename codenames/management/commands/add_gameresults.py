@@ -92,24 +92,19 @@ class Command(BaseCommand):
 
             # TODO: add checking already existing game results
             for game in round_games:
-                # Skip this game if group size is odd
-                # And team skips this rounds
-                # (equals "team plays with dummy team")
                 try:
-                    home_team: Team = group_teams.get(seed=game["first"] - 1)
+                    # Skip this game if group size is odd
+                    # And team skips this rounds
+                    # (equals "team plays with dummy team")
+                    game_result = GameResult(
+                        group=dst_group,
+                        home_team=group_teams.get(seed=game["first"] - 1),
+                        away_team=group_teams.get(seed=game["second"] - 1),
+                        round_number=round_index,
+                        arena=Arena.objects.filter(group=dst_group).order_by(
+                            "number")[game["seat"] - 1]
+                    )
+                    game_result.save()
+                    print(f"GameResult {game_result} saved")
                 except Team.DoesNotExist:
                     continue
-                try:
-                    away_team: Team = group_teams.get(seed=game["second"] - 1)
-                except Team.DoesNotExist:
-                    continue
-                game_result = GameResult(
-                    group=dst_group,
-                    home_team=home_team,
-                    away_team=away_team,
-                    round_number=round_index,
-                    arena=Arena.objects.filter(group=dst_group).order_by(
-                        "number")[game["seat"] - 1]
-                )
-                game_result.save()
-                print(f"GameResult {game_result} saved")
