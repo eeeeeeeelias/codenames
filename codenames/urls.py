@@ -11,7 +11,7 @@ urlpatterns = [
     # TODO: add re_path for .../A/
     path("", views.start_view, name="index"),
     path("results/", views.all_groups_tables_view, name="all_groups_tables"),
-    path("results/<str:group_name>/",
+    path("<str:group_name>/results/",
          views.one_group_table_view,
          name="one_group_table"),
     path("cup<int:cup_number>/results/",
