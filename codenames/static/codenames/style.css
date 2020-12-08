@@ -1,19 +1,30 @@
+:root {
+    --background-color: #EAE7DC;
+    --dark-color: #E85A4F;
+    --middle-color: #E98074;
+    --light-color: #D8C3A5;
+    --dark-gray-color: #8E8D8A;
+    --middle-gray-color: #CCCCCC;
+    --light-gray-color: #EEEEEE;
+    --black-color: #202020;
+}
+
 body {
-    background-color: #EAE7DC;
+    background-color: var(--background-color);
 }
 
 table, th, td {
     border-collapse: collapse;
-    border: 2px solid #E85A4F;
+    border: 2px solid var(--dark-color);
 }
 
 th {
-    background-color: #E98074;
+    background-color: var(--middle-color);
 }
 
 .won_cell {
     font-weight: bolder;
-    background-color: #D8C3A5;
+    background-color: var(--light-color);
 }
 
 .place_header {
@@ -35,41 +46,40 @@ th {
 
 .auto_win {
     font-style: italic;
-    background-color: #8E8D8A;
+    background-color: var(--dark-gray-color);
 }
 
 .auto_lose {
-    background-color: #8E8D8A;
+    background-color: var(--dark-gray-color);
 }
 
 .itself_cell {
-    background-color: #202020;
+    background-color: var(--black-color);
 }
 
 .scheduled {
     font-size: small;
-    color: #606060;
+    color: var(--dark-gray-color);
 }
 
 input[type=number], select {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--middle-gray-color);
   border-radius: 4px;
+  background-color: var(--light-gray-color);
   box-sizing: border-box;
   resize: vertical;
 }
 
-/* Style the label to display next to the inputs */
 label {
   padding: 12px 12px 12px 0;
   display: inline-block;
 }
 
-/* Style the submit button */
 input[type=submit] {
-  background-color: #4CAF50;
-  color: white;
+  background-color: var(--dark-color);
+  color: var(--light-gray-color);
   padding: 12px 20px;
   border: none;
   border-radius: 4px;
@@ -78,10 +88,9 @@ input[type=submit] {
   float: right;
 }
 
-/* Style the container */
 .container {
   border-radius: 5px;
-  background-color: #f2f2f2;
+  background-color: var(--light-color);
   padding: 20px;
 }
 
