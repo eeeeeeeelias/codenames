@@ -15,7 +15,7 @@ class AddResultForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         self.fields["game"] = forms.CharField(
-            label=_("Choose a game"),
+            label=_("Choose a game:"),
             widget=forms.Select(choices=games_choices)
         )
 
@@ -23,7 +23,7 @@ class AddResultForm(forms.Form):
         self.order_fields(["game"])
 
     result_type = forms.ModelChoiceField(
-        label=_("Choose result type"),
+        label=_("Choose result type:"),
         queryset=ResultType.objects.all(),
         widget=forms.Select(
             attrs={"onchange": "updateScoreFieldState();"}
@@ -31,8 +31,8 @@ class AddResultForm(forms.Form):
     )
 
     score = forms.CharField(
-        label=_("Choose score"),
-        widget=forms.Select(choices=SCORE_CHOICES),
+        label=_("Choose score:"),
+        widget=forms.Select(choices=[sc for sc in SCORE_CHOICES if sc[0] >= 0]),
         initial=0
     )
 
@@ -49,13 +49,12 @@ class AddResultForm(forms.Form):
         initial=0
     )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        result_type = cleaned_data.get("result_type")
-        score = int(cleaned_data.get("score"))
-
+    def clean_score(self):
+        score = int(self.cleaned_data["score"])
+        result_type = self.cleaned_data["result_type"]
+        if not result_type.is_home_win:
+            score *= -1
         if result_type.is_auto:
-            # If team autowins, score is chosen automatically
             if score != 0:
                 self.add_error(
                     "score",
@@ -64,22 +63,10 @@ class AddResultForm(forms.Form):
                         code="score not neede")
                 )
         else:
-            # If team covers all its words, you need to choose score
             if score == 0:
                 self.add_error(
                     "score",
                     ValidationError(_("Please choose score"),
                                     code="score not chosen")
                 )
-            if result_type.abbr == "W1" and score < 0:
-                self.add_error(
-                    "score",
-                    ValidationError(_("Choose correct score for team 1 win"),
-                                    code="negative score for home win")
-                )
-            if result_type.abbr == "W2" and score > 0:
-                self.add_error(
-                    "score",
-                    ValidationError(_("Choose correct score for team 2 win"),
-                                    code="positive score for home win")
-                )
+        return score

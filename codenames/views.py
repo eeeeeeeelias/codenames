@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .consts import CURRENT_CUP_NUMBER
 from .forms import AddResultForm
-from .models import Cup, GameResult, Group
+from .models import Cup, GameResult, Group, ResultType
 from .table_render import render_result_table_content
 from .table_render import render_result_table_header
 from .table_render import get_recent_games_schedule, get_upcoming_games_schedule
@@ -109,15 +109,17 @@ def get_games_choices(group_name: str):
 def add_result(request, group_name: str):
     last_add_result: tp.Optional[str] = None
     if request.method == "POST":
-        print('request.method == "POST"')
         form = AddResultForm(request.POST,
                              games_choices=get_games_choices(group_name))
         if form.is_valid():
             data = request.POST
-            print(data)
+            result_type = ResultType.objects.get(id=data["result_type"])
+            score = int(data["score"])
+            if result_type.is_away_win:
+                score *= -1
             GameResult.objects.filter(id=int(data["game"])).update(
                 result_type=data["result_type"],
-                score=data["score"],
+                score=score,
                 home_team_fouls=data["home_team_fouls"],
                 away_team_fouls=data["away_team_fouls"],
             )
@@ -126,13 +128,15 @@ def add_result(request, group_name: str):
         else:
             last_add_result = _("Failed to add result!")
     elif request.method == "GET" or form.is_valid():
-        print('request.method == "GET" or form.is_valid()')
         form = AddResultForm(games_choices=get_games_choices(group_name))
 
-
+    auto_result_ids: tp.List[int] = [
+        rt.id for rt in ResultType.objects.all() if rt.is_auto
+    ]
     context = {
         "group_name": group_name,
         "last_add_result": last_add_result,
         "form": form,
+        "auto_result_ids": auto_result_ids,
     }
     return render(request, "codenames/add_result.html", context)

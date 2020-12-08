@@ -25,7 +25,9 @@
             {% for field in form.visible_fields %}
             <div class="row">
                 <div class="col-25">
-                    {{ field.label_tag }}
+                    <label for="{{ field.id_for_label }}" id="label_{{ field.id_for_label }}">
+                    {{ field.label }}
+                    </label>
                 </div>
                 <div class="col-75">
                     {% for error in field.errors%}
@@ -47,13 +49,17 @@
 
 <script>
 function updateScoreFieldState() {
-    var value = document.getElementById("id_result_type").value;
-    <!-- console.log(value) -->
-    if (value <= 2)  <!-- TODO -->
+    var auto_result_ids = {{ auto_result_ids }};
+    var result_id = Number(document.getElementById("id_result_type").value);
+    if (auto_result_ids.indexOf(result_id) != -1)
     {
-        document.getElementById("id_score").disabled = false;
+        document.getElementById("id_score").style.visibility = "hidden";
+        document.getElementById("label_id_score").style.visibility = "hidden";
+        document.getElementById("id_score").value = 0;
     } else {
-        document.getElementById("id_score").disabled = true;
+        document.getElementById("id_score").style.visibility = "visible"
+        document.getElementById("label_id_score").style.visibility = "visible"
+        document.getElementById("id_score").value = 0;
     }
 }
 </script>
