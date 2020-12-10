@@ -10,6 +10,9 @@ from django.db.models.functions import Coalesce
 
 from .consts import get_score_str
 from .models import GameResult, Group, ResultType, Team
+from .table_consts import TABLE_COLUMNS_AFTER_RESULTS_ORDER
+from .table_consts import TABLE_COLUMNS_BEFORE_RESULTS_ORDER
+from .table_consts import TIE_BREAKERS_WEIGHTS
 
 
 class HtmlTableCell:
@@ -55,18 +58,28 @@ def render_result_table_header(group: Group) -> None:
     """
     TODO: stub
     """
-    teams = list(Team.objects.filter(group=group))
+    group_size = Team.objects.filter(group=group).count()
+    header_row = {
+        cell.class_: cell for cell in [
+            HtmlTableCell(class_="place_header", content="#", title="Place"),
+            HtmlTableCell(class_="team_header", content="Team"),
+            HtmlTableCell(class_="played_header", content="Played"),
+            HtmlTableCell(class_="won_header", content="Won"),
+            HtmlTableCell(class_="lost_header", content="Lost"),
+            HtmlTableCell(class_="words_difference_header", content="+/−",
+                          title="Words difference"),
+            HtmlTableCell(class_="fouls_header", content="Fouls"),
+        ]
+    }
     return [
-        HtmlTableCell(class_="place_header", content="#", title="Place"),
-        HtmlTableCell(class_="team_header", content="Team"),
-        *[HtmlTableCell(class_="gameresult_header", content=f"{place+1}")
-          for place in range(len(teams))],
-        HtmlTableCell(class_="played_header", content="Played"),
-        HtmlTableCell(class_="won_header", content="Won"),
-        HtmlTableCell(class_="lost_header", content="Lost"),
-        HtmlTableCell(class_="wd_header", content="+/−",
-                      title="Words difference"),
-        HtmlTableCell(class_="fouls_header", content="Fouls"),
+        header_row[f"{column}_header"]
+        for column in TABLE_COLUMNS_BEFORE_RESULTS_ORDER
+    ] + [
+        HtmlTableCell(class_="gameresult_header", content=f"{place + 1}")
+        for place in range(group_size)
+    ] + [
+        header_row[f"{column}_header"]
+        for column in TABLE_COLUMNS_AFTER_RESULTS_ORDER
     ]
 
 
@@ -92,7 +105,7 @@ def get_gameresult_cell(game_result: GameResult,
     if game_result.result_type.is_home_win == is_team_home:
         # Win
         if game_result.result_type.is_auto:
-            # Do not count auto_win wd
+            # Do not count auto_win words difference
             classes.append("auto_win")
         else:
             words_difference[0] += game_result.absolute_score
@@ -100,7 +113,7 @@ def get_gameresult_cell(game_result: GameResult,
         # Lose
         if game_result.result_type.is_auto:
             classes.append("auto_lose")
-        # Do count auto lose wd!
+        # Do count auto lose words difference!
         words_difference[0] -= game_result.absolute_score
 
     return HtmlTableCell(
@@ -143,66 +156,18 @@ def count_fouls(home_finished_games, away_finished_games) -> int:
     return home_fouls + away_fouls
 
 
-TIE_BREAKERS_ORDER = [
-    "won",
-    "optional_won_between",
-    "absences",
-    "serious_fouls",
-    "fouls",
-    "black_loses",
-    "optional_black_loses_between",
-    "words_difference",
-    "optional_words_difference_between",
-    "games_played",
-]
-
-
-TIE_BREAKERS_WEIGHTS = {
-    "won": +1,
-    "optional_won_between": +1,
-    "absences": -1,
-    "serious_fouls": -1,
-    "fouls": -1,
-    "black_loses": -1,
-    "optional_black_loses_between": -1,
-    "words_difference": +1,
-    "optional_words_difference_between": +1,
-    "games_played": +1,
-}
-
-
-def get_row(seed, team, group, num_teams, tie_breakers):
-    result_subrow: tp.List[HtmlTableCell] = [
-        HtmlTableCell(
-            class_=("itself_cell" if seed == rival_seed else None)
-        ) for rival_seed in range(num_teams)
-    ]
-
+def get_row(seed, team, group, num_teams):
+    """
+    Return dict of HtmlTableCell objects for one team.
+    """
     home_games = GameResult.objects.filter(home_team=team, group=group)
     away_games = GameResult.objects.filter(away_team=team, group=group)
 
-    words_difference: tp.List[int] = [0]
-
-    for game in home_games:
-        rival_seed = game.away_team.seed
-        result_subrow[rival_seed] = get_gameresult_cell(
-            game,
-            is_team_home=True,
-            words_difference=words_difference)
-    for game in away_games:
-        rival_seed = game.home_team.seed
-        result_subrow[rival_seed] = get_gameresult_cell(
-            game,
-            is_team_home=False,
-            words_difference=words_difference)
-
-    games_won: int
-    games_lost: int
     games_won, games_lost = count_game_results(home_games, away_games)
-    games_played: int = games_won + games_lost
 
     num_fouls: int = count_fouls(home_games, away_games)
 
+    tie_breakers = {}
     tie_breakers["won"] = games_won
     tie_breakers["absences"] = (
         home_games.filter(result_type__abbr="A2").count()
@@ -217,25 +182,51 @@ def get_row(seed, team, group, num_teams, tie_breakers):
         home_games.filter(result_type__abbr="B2").count()
         + away_games.filter(result_type__abbr="B1").count()
     )
-    tie_breakers["words_difference"] = words_difference[0]
-    tie_breakers["games_played"] = games_played
 
-    for key in tie_breakers.keys():
+    words_difference: tp.List[int] = [0]
+
+    result_subrow: tp.List[HtmlTableCell] = [
+        HtmlTableCell(
+            class_=("itself_cell" if seed == rival_seed else None)
+        ) for rival_seed in range(num_teams)
+    ]
+    for game in home_games:
+        rival_seed = game.away_team.seed
+        result_subrow[rival_seed] = get_gameresult_cell(
+            game,
+            is_team_home=True,
+            words_difference=words_difference)
+    for game in away_games:
+        rival_seed = game.home_team.seed
+        result_subrow[rival_seed] = get_gameresult_cell(
+            game,
+            is_team_home=False,
+            words_difference=words_difference)
+
+    tie_breakers["words_difference"] = words_difference[0]
+    tie_breakers["games_played"] = games_won + games_lost
+
+    for key in tie_breakers:
         tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
 
-    return [
-        HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
-        HtmlTableCell(class_="team_cell", content=f"{team.short}"),
-        *result_subrow,
-        HtmlTableCell(class_="played_cell", content=f"{games_played}"),
-        HtmlTableCell(class_="won_cell", content=f"{games_won}"),
-        HtmlTableCell(class_="lost_cell", content=f"{games_lost}"),
-        HtmlTableCell(
-            class_="wd_cell",
-            content=f"{words_difference[0]: }",
-            title="Words difference"),
-        HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
-    ]
+    row = {
+        cell.class_: cell for cell in [
+            HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
+            HtmlTableCell(class_="team_cell", content=f"{team.short}"),
+            HtmlTableCell(class_="played_cell",
+                          content=f"{games_won + games_lost}"),
+            HtmlTableCell(class_="won_cell", content=f"{games_won}"),
+            HtmlTableCell(class_="lost_cell", content=f"{games_lost}"),
+            HtmlTableCell(
+                class_="words_difference_cell",
+                content=f"{words_difference[0]: }",
+                title="Words difference"),
+            HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
+        ]
+    }
+    row["results"] = result_subrow
+    row["tie_breakers"] = tie_breakers
+    return row
 
 
 def render_result_table_content(group: Group) -> None:
@@ -254,12 +245,20 @@ def render_result_table_content(group: Group) -> None:
     # like "optional_won_between",
     # "optional_black_loses_between",
     # "optional_words_difference_between".
-    tie_breakers = [{} for seed in range(num_teams)]
     for seed in range(num_teams):
         team = teams[seed]
-        result_table[seed] = get_row(
-            seed, team, group, num_teams, tie_breakers[seed])
-    print(tie_breakers)
+        row = get_row(
+            seed, team, group, num_teams)
+        result_table[seed] = (
+            [
+                row[f"{column}_cell"]
+                for column in TABLE_COLUMNS_BEFORE_RESULTS_ORDER
+            ] + row["results"]
+            + [
+                row[f"{column}_cell"]
+                for column in TABLE_COLUMNS_AFTER_RESULTS_ORDER
+            ]
+        )
     # TODO: add place-giving process
 
     return result_table
