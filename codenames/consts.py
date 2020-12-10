@@ -8,7 +8,7 @@ from string import ascii_uppercase
 
 CURRENT_CUP_NUMBER: int = 5
 
-GROUPS_NUMBER: int = 2
+GROUPS_NUMBER: int = 4
 
 Letter = str
 
