@@ -14,7 +14,8 @@ from .forms import AddResultForm
 from .models import Cup, GameResult, Group, ResultType
 from .table_render import render_result_table_content
 from .table_render import render_result_table_header
-from .table_render import get_recent_games_schedule, get_upcoming_games_schedule
+from .table_render import get_recent_games_schedule
+from .table_render import get_upcoming_games_schedule
 
 
 NON_EXISTING_CUP_ERROR_MESSAGE = _("There is no such cup")
@@ -115,7 +116,6 @@ def get_games_choices(group_name: str):
     return [
         (game.id, game) for game in games_list
     ]
-
 
 
 def add_result(request, group_name: str):
