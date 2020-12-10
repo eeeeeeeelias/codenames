@@ -232,6 +232,27 @@ def get_row(seed, team, group, num_teams):
     return row
 
 
+def get_result_table_with_sorted_results(table):
+    num_teams = len(table)
+    sorted_table = [None for seed in range(num_teams)]
+    for place, team_row in enumerate(table):
+        unsorted_results = team_row["results"]
+        sorted_results = [None for place in range(num_teams)]
+        for rival_place, rival_row in enumerate(table):
+            sorted_results[rival_place] = unsorted_results[rival_row["seed"]]
+        sorted_table[place] = (
+            [
+                team_row[f"{column}_cell"]
+                for column in TABLE_COLUMNS_BEFORE_RESULTS_ORDER
+            ] + sorted_results
+            + [
+                team_row[f"{column}_cell"]
+                for column in TABLE_COLUMNS_AFTER_RESULTS_ORDER
+            ]
+        )
+    return sorted_table
+
+
 def render_result_table_content(group: Group) -> None:
     """
     TODO: stub
@@ -262,24 +283,8 @@ def render_result_table_content(group: Group) -> None:
     )
     for place in range(num_teams):
         table_with_unsorted_results[place]["place_cell"].content = place + 1
-    sorted_table = [None for seed in range(num_teams)]
-    for place, team_row in enumerate(table_with_unsorted_results):
-        unsorted_results = team_row["results"]
-        sorted_results = [None for place in range(num_teams)]
-        for rival_place, rival_row in enumerate(table_with_unsorted_results):
-            sorted_results[rival_place] = unsorted_results[rival_row["seed"]]
-        sorted_table[place] = (
-            [
-                team_row[f"{column}_cell"]
-                for column in TABLE_COLUMNS_BEFORE_RESULTS_ORDER
-            ] + sorted_results
-            + [
-                team_row[f"{column}_cell"]
-                for column in TABLE_COLUMNS_AFTER_RESULTS_ORDER
-            ]
-        )
 
-    return sorted_table
+    return get_result_table_with_sorted_results(table_with_unsorted_results)
 
 
 # Number of rounds to show in "recent" and "upcoming"
