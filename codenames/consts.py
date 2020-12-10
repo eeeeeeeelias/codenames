@@ -32,6 +32,7 @@ LATE_FEE_SIZE: int = 900
 DUMMY_STRING_REPRESENTATION: str = "---------"
 DUMMY_GROUP_NAME: str = "Z"
 
+
 def get_score_str(score: int) -> str:
     """
     Get string with scores with colon
@@ -43,6 +44,7 @@ def get_score_str(score: int) -> str:
     if score > 0:
         return f"{score}:0"
     return f"0:{-score}"
+
 
 HOME_TEAM_WORDS_NUMBER: int = 9
 AWAY_TEAM_WORDS_NUMBER: int = 8
