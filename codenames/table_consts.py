@@ -30,6 +30,7 @@ TIE_BREAKERS_ORDER = [
     "words_difference",
     "optional_words_difference_between",
     "games_played",
+    "seed"
 ]
 TIE_BREAKERS_WEIGHTS = {
     "won": +1,
@@ -42,6 +43,7 @@ TIE_BREAKERS_WEIGHTS = {
     "words_difference": +1,
     "optional_words_difference_between": +1,
     "games_played": +1,
+    "seed": +1,
 }
 
 OPTIONAL_TIE_BREAKERS = {

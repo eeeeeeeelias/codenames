@@ -12,7 +12,8 @@ from .consts import get_score_str
 from .models import GameResult, Group, ResultType, Team
 from .table_consts import TABLE_COLUMNS_AFTER_RESULTS_ORDER
 from .table_consts import TABLE_COLUMNS_BEFORE_RESULTS_ORDER
-from .table_consts import TIE_BREAKERS_WEIGHTS
+from .table_consts import TIE_BREAKERS_ORDER, TIE_BREAKERS_WEIGHTS
+from .table_consts import OPTIONAL_TIE_BREAKERS
 
 
 class HtmlTableCell:
@@ -205,6 +206,7 @@ def get_row(seed, team, group, num_teams):
 
     tie_breakers["words_difference"] = words_difference[0]
     tie_breakers["games_played"] = games_won + games_lost
+    tie_breakers["seed"] = seed
 
     for key in tie_breakers:
         tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
@@ -226,6 +228,7 @@ def get_row(seed, team, group, num_teams):
     }
     row["results"] = result_subrow
     row["tie_breakers"] = tie_breakers
+    row["seed"] = seed
     return row
 
 
@@ -240,28 +243,43 @@ def render_result_table_content(group: Group) -> None:
         for item in teams_set.values("seed")
     }
 
-    result_table = [None for seed in range(num_teams)]
     # TODO: add getting of optional tie breakers
     # like "optional_won_between",
     # "optional_black_loses_between",
     # "optional_words_difference_between".
+    table_with_unsorted_results = [None for seed in range(num_teams)]
     for seed in range(num_teams):
         team = teams[seed]
-        row = get_row(
+        table_with_unsorted_results[seed] = get_row(
             seed, team, group, num_teams)
-        result_table[seed] = (
+    table_with_unsorted_results.sort(
+        key=lambda item: [
+            item["tie_breakers"][tb]
+            for tb in TIE_BREAKERS_ORDER
+            if tb not in OPTIONAL_TIE_BREAKERS
+        ],
+        reverse=True
+    )
+    for place in range(num_teams):
+        table_with_unsorted_results[place]["place_cell"].content = place + 1
+    sorted_table = [None for seed in range(num_teams)]
+    for place, team_row in enumerate(table_with_unsorted_results):
+        unsorted_results = team_row["results"]
+        sorted_results = [None for place in range(num_teams)]
+        for rival_place, rival_row in enumerate(table_with_unsorted_results):
+            sorted_results[rival_place] = unsorted_results[rival_row["seed"]]
+        sorted_table[place] = (
             [
-                row[f"{column}_cell"]
+                team_row[f"{column}_cell"]
                 for column in TABLE_COLUMNS_BEFORE_RESULTS_ORDER
-            ] + row["results"]
+            ] + sorted_results
             + [
-                row[f"{column}_cell"]
+                team_row[f"{column}_cell"]
                 for column in TABLE_COLUMNS_AFTER_RESULTS_ORDER
             ]
         )
-    # TODO: add place-giving process
 
-    return result_table
+    return sorted_table
 
 
 # Number of rounds to show in "recent" and "upcoming"
