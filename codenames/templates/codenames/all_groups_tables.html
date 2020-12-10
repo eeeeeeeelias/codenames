@@ -24,7 +24,7 @@
         <tr>
             {% for cell in row %}
             <td {% if cell.class_ %} class="{{ cell.class_ }}"{% endif %}>
-                <div {% if cell.title %}title="{{ cell.title }}"{% endif %} class="hey">
+                <div {% if cell.title %}title="{{ cell.title }}"{% endif %}>
                     {{ cell.content }}
                 </div>
             </td>
