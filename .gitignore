@@ -2,7 +2,7 @@
 *~
 __pycache__
 cn_venv
-db.sqlite3
+*.sqlite3
 /static
 .DS_Store
 installing_django.txt
