@@ -1,1 +1,2 @@
-web: gunicorn cn_web.wsgi:codenames --log-file -
+web: gunicorn cn_web.wsgi --log-file -
+python run manage.py migrate
