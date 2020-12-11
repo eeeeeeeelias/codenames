@@ -1,1 +1,1 @@
-web: gunicorn codenames.wsgi --log-file -
+web: gunicorn cn_web.wsgi --log-file -
