@@ -87,6 +87,10 @@ class Command(BaseCommand):
         with open(schedule_path, "r", encoding="utf-8") as json_src:
             schedule = json.load(json_src)
 
+        group_arenas = Arena.objects.filter(group=dst_group)
+        if group_arenas.count() < group_size // 2:
+            raise CommandError("too few arenas")
+
         for round_index in range(len(schedule)):
             round_games = schedule[f"{round_index + 1}"]
 
@@ -101,7 +105,7 @@ class Command(BaseCommand):
                         home_team=group_teams.get(seed=game["first"] - 1),
                         away_team=group_teams.get(seed=game["second"] - 1),
                         round_number=round_index,
-                        arena=Arena.objects.filter(group=dst_group).order_by(
+                        arena=group_arenas.order_by(
                             "number")[game["seat"] - 1]
                     )
                     game_result.save()
