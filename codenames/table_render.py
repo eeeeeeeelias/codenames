@@ -206,10 +206,15 @@ def get_row(seed, team, group, num_teams):
 
     tie_breakers["words_difference"] = words_difference[0]
     tie_breakers["games_played"] = games_won + games_lost
-    tie_breakers["seed"] = seed
 
     for key in tie_breakers:
-        tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
+        if key in TIE_BREAKERS_ORDER:
+            try:
+                tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
+            except KeyError:
+                raise KeyError(f"no tie breaker {key} in weights")
+        else:
+            raise KeyError(f"no tie breaker {key} in order")
 
     row = {
         cell.class_: cell for cell in [
