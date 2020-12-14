@@ -258,18 +258,48 @@ def get_result_table_with_sorted_results(table):
     return sorted_table
 
 
-def sort_result_table(table):
-    table.sort(
-        key=lambda item: [
+def calculate_places(table):
+    # Give tied_place 1 to everyone.
+    for row in table:
+        row["tie_breakers"]["tied_place"] = 0
+
+    num_teams = len(table)
+
+    tie_breaker_idx = 0
+    while tie_breaker_idx < len(TIE_BREAKERS_ORDER):
+        tie_breaker = TIE_BREAKERS_ORDER[tie_breaker_idx]
+        if tie_breaker in OPTIONAL_TIE_BREAKERS:
+            continue
+        tied_places = [row["tie_breakers"]["tied_place"] for row in table]
+        num_ties_before_breaking = num_teams - len(set(tied_places))
+        print(f"num_ties_before_breaking == {num_ties_before_breaking}")
+        print(" ".join(str(place) for place in tied_places))
+        tie_breakers = [
+            "tied_place"
+        ] + [
+            tb for tb in TIE_BREAKERS_ORDER[:tie_breaker_idx + 1]
+            if tb not in OPTIONAL_TIE_BREAKERS
+        ]
+        print(tie_breakers)
+        tie_break_values = lambda item: [
             item["tie_breakers"][tb]
             for tb in TIE_BREAKERS_ORDER
             if tb not in OPTIONAL_TIE_BREAKERS
-        ],
-        reverse=True
-    )
-    num_teams = len(table)
-    for place in range(num_teams):
-        table[place]["place_cell"].content = place + 1
+        ]
+        table.sort(
+            key=tie_break_values,
+            reverse=True
+        )
+
+        # Check if that tie breaker helps
+        num_ties_before_breaking = num_teams - len(set(tied_places))
+        print(f"num_ties_after_breaking == {num_ties_after_breaking}")
+        if num_ties_before_breaking == num_ties_after_breaking:
+            tie_breaker_idx += 1
+
+
+    for row in table:
+        row["place_cell"].content = row["tie_breakers"]["tied_place"] + 1
 
 
 def render_result_table_content(group: Group) -> None:
@@ -292,7 +322,7 @@ def render_result_table_content(group: Group) -> None:
         team = teams[seed]
         table_with_unsorted_results[seed] = get_row(
             seed, team, group, num_teams)
-    sort_result_table(table_with_unsorted_results)
+    calculate_places(table_with_unsorted_results)
 
     return get_result_table_with_sorted_results(table_with_unsorted_results)
 
