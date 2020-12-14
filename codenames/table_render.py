@@ -253,6 +253,20 @@ def get_result_table_with_sorted_results(table):
     return sorted_table
 
 
+def sort_result_table(table):
+    table.sort(
+        key=lambda item: [
+            item["tie_breakers"][tb]
+            for tb in TIE_BREAKERS_ORDER
+            if tb not in OPTIONAL_TIE_BREAKERS
+        ],
+        reverse=True
+    )
+    num_teams = len(table)
+    for place in range(num_teams):
+        table[place]["place_cell"].content = place + 1
+
+
 def render_result_table_content(group: Group) -> None:
     """
     TODO: stub
@@ -273,16 +287,7 @@ def render_result_table_content(group: Group) -> None:
         team = teams[seed]
         table_with_unsorted_results[seed] = get_row(
             seed, team, group, num_teams)
-    table_with_unsorted_results.sort(
-        key=lambda item: [
-            item["tie_breakers"][tb]
-            for tb in TIE_BREAKERS_ORDER
-            if tb not in OPTIONAL_TIE_BREAKERS
-        ],
-        reverse=True
-    )
-    for place in range(num_teams):
-        table_with_unsorted_results[place]["place_cell"].content = place + 1
+    sort_result_table(table_with_unsorted_results)
 
     return get_result_table_with_sorted_results(table_with_unsorted_results)
 
