@@ -23,7 +23,7 @@ class AddResultForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         self.fields["game"] = forms.CharField(
-            label=_("Choose a game:"),
+            label=_("Game:"),
             widget=forms.Select(choices=games_choices)
         )
 
@@ -31,7 +31,7 @@ class AddResultForm(forms.Form):
         self.order_fields(["game"])
 
     result_type = forms.ModelChoiceField(
-        label=_("Choose result type:"),
+        label=_("Result type:"),
         queryset=ResultType.objects.all(),
         widget=forms.Select(
             attrs={"onchange": "updateFieldsStates();"}
@@ -39,7 +39,7 @@ class AddResultForm(forms.Form):
     )
 
     score = forms.CharField(
-        label=_("Choose score:"),
+        label=_("Score:"),
         widget=forms.Select(choices=[sc for sc in SCORE_CHOICES if sc[0] >= 0]),
         initial=0
     )
