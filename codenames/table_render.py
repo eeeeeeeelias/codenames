@@ -259,9 +259,9 @@ def get_result_table_with_sorted_results(table):
 
 
 def calculate_places(table):
-    # Give tied_place 1 to everyone.
+    # Give shared_place 1 to everyone.
     for row in table:
-        row["tie_breakers"]["tied_place"] = 0
+        row["tie_breakers"]["shared_place"] = 0
 
     num_teams = len(table)
 
@@ -269,37 +269,56 @@ def calculate_places(table):
     while tie_breaker_idx < len(TIE_BREAKERS_ORDER):
         tie_breaker = TIE_BREAKERS_ORDER[tie_breaker_idx]
         if tie_breaker in OPTIONAL_TIE_BREAKERS:
+            # TODO: add processing of optional tie breakers
+            tie_breaker_idx += 1
             continue
-        tied_places = [row["tie_breakers"]["tied_place"] for row in table]
-        num_ties_before_breaking = num_teams - len(set(tied_places))
-        print(f"num_ties_before_breaking == {num_ties_before_breaking}")
-        print(" ".join(str(place) for place in tied_places))
+        shared_places = [row["tie_breakers"]["shared_place"] for row in table]
+        num_ties_before_breaking = num_teams - len(set(shared_places))
+
         tie_breakers = [
-            "tied_place"
+            "shared_place"
         ] + [
             tb for tb in TIE_BREAKERS_ORDER[:tie_breaker_idx + 1]
             if tb not in OPTIONAL_TIE_BREAKERS
         ]
-        print(tie_breakers)
+
         tie_break_values = lambda item: [
             item["tie_breakers"][tb]
-            for tb in TIE_BREAKERS_ORDER
+            for tb in tie_breakers
             if tb not in OPTIONAL_TIE_BREAKERS
         ]
         table.sort(
             key=tie_break_values,
-            reverse=True
         )
 
-        # Check if that tie breaker helps
-        num_ties_before_breaking = num_teams - len(set(tied_places))
-        print(f"num_ties_after_breaking == {num_ties_after_breaking}")
-        if num_ties_before_breaking == num_ties_after_breaking:
-            tie_breaker_idx += 1
+        new_shared_places = [0 for _ in range(num_teams)]
+        for place in range(1, num_teams):
+            previous_row = table[place - 1]
+            current_row = table[place]
+            if tie_break_values(previous_row) == tie_break_values(current_row):
+                # Shares place with previous team.
+                new_shared_places[place] = new_shared_places[place - 1]
+            else:
+                # Get next place.
+                new_shared_places[place] = place
+        for place in range(num_teams):
+            table[place]["tie_breakers"]["shared_place"] = new_shared_places[place]
 
+        # Check if that tie breaker helps
+        shared_places = [row["tie_breakers"]["shared_place"] for row in table]
+        num_ties_after_breaking = num_teams - len(set(shared_places))
+        print(f"shared_places == {shared_places}")
+        print(f"num_ties_after_breaking == {num_ties_after_breaking}")
+        if num_ties_after_breaking == 0:
+            break
+        if tie_breaker in OPTIONAL_TIE_BREAKERS:
+            # Optional tie breaker can be used more than 1 time!
+            if num_ties_after_breaking > num_ties_before_breaking:
+                continue
+        tie_breaker_idx += 1
 
     for row in table:
-        row["place_cell"].content = row["tie_breakers"]["tied_place"] + 1
+        row["place_cell"].content = row["tie_breakers"]["shared_place"] + 1
 
 
 def render_result_table_content(group: Group) -> None:
