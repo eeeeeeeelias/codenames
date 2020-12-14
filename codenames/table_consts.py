@@ -21,6 +21,7 @@ TABLE_COLUMNS_AFTER_RESULTS_ORDER = [
 # finished all games with each other
 TIE_BREAKERS_ORDER = [
     "won",
+    "games_played",
     "optional_won_between",
     "absences",
     "serious_fouls",
@@ -29,19 +30,19 @@ TIE_BREAKERS_ORDER = [
     "optional_black_loses_between",
     "words_difference",
     "optional_words_difference_between",
-    "games_played",
 ]
+# Choose -1 if "more is better" (like "won"), else +1
 TIE_BREAKERS_WEIGHTS = {
-    "won": +1,
-    "optional_won_between": +1,
-    "absences": -1,
-    "serious_fouls": -1,
-    "fouls": -1,
-    "black_loses": -1,
-    "optional_black_loses_between": -1,
-    "words_difference": +1,
-    "optional_words_difference_between": +1,
-    "games_played": +1,
+    "won": -1,
+    "optional_won_between": -1,
+    "absences": +1,
+    "serious_fouls": +1,
+    "fouls": +1,
+    "black_loses": +1,
+    "optional_black_loses_between": +1,
+    "words_difference": -1,
+    "optional_words_difference_between": -1,
+    "games_played": -1,
 }
 
 OPTIONAL_TIE_BREAKERS = {
