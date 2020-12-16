@@ -1,5 +1,5 @@
 """
-Some data to render result tables and to break ties.
+Some data to render result tables.
 """
 
 # Order of columns in result table
@@ -14,39 +14,3 @@ TABLE_COLUMNS_AFTER_RESULTS_ORDER = [
     "words_difference",
     "fouls",
 ]
-
-# Order and weight of tie breakers in group
-# Start tie breaker name with "optional"
-# if tie breaker is used only when all tied teams
-# finished all games with each other
-TIE_BREAKERS_ORDER = [
-    "won",
-    "games_played",
-    "optional_won_between",
-    "absences",
-    "serious_fouls",
-    "fouls",
-    "black_loses",
-    "optional_black_loses_between",
-    "words_difference",
-    "optional_words_difference_between",
-]
-# Choose -1 if "more is better" (like "won"), else +1
-TIE_BREAKERS_WEIGHTS = {
-    "won": -1,
-    "optional_won_between": -1,
-    "absences": +1,
-    "serious_fouls": +1,
-    "fouls": +1,
-    "black_loses": +1,
-    "optional_black_loses_between": +1,
-    "words_difference": -1,
-    "optional_words_difference_between": -1,
-    "games_played": -1,
-}
-
-OPTIONAL_TIE_BREAKERS = {
-    "optional_won_between",
-    "optional_black_loses_between",
-    "optional_words_difference_between",
-}

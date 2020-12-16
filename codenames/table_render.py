@@ -5,15 +5,13 @@ Rendering functions for future html tables
 import copy
 import typing as tp
 
-from django.db.models import Sum
-from django.db.models.functions import Coalesce
-
 from .consts import get_score_str
-from .models import GameResult, Group, ResultType, Team
+from .models import GameResult, Group, Team
 from .table_consts import TABLE_COLUMNS_AFTER_RESULTS_ORDER
 from .table_consts import TABLE_COLUMNS_BEFORE_RESULTS_ORDER
-from .table_consts import TIE_BREAKERS_ORDER, TIE_BREAKERS_WEIGHTS
-from .table_consts import OPTIONAL_TIE_BREAKERS
+from .tiebreak import TIE_BREAKERS_ORDER, TIE_BREAKERS_WEIGHTS
+from .tiebreak import OPTIONAL_TIE_BREAKERS
+from .tiebreak import tie_breaker_calculators
 
 
 class HtmlTableCell:
@@ -86,11 +84,7 @@ def render_result_table_header(group: Group) -> None:
 
 def get_gameresult_cell(game_result: GameResult,
                         *,
-                        words_difference: tp.List[int],
                         is_team_home: bool) -> HtmlTableCell:
-    """
-    words_difference is in AND out!
-    """
     title: tp.Optional[str] = None
     if not game_result.is_finished:
         return HtmlTableCell(
@@ -106,16 +100,11 @@ def get_gameresult_cell(game_result: GameResult,
     if game_result.result_type.is_home_win == is_team_home:
         # Win
         if game_result.result_type.is_auto:
-            # Do not count auto_win words difference
             classes.append("auto_win")
-        else:
-            words_difference[0] += game_result.absolute_score
     else:
         # Lose
         if game_result.result_type.is_auto:
             classes.append("auto_lose")
-        # Do count auto lose words difference!
-        words_difference[0] -= game_result.absolute_score
 
     return HtmlTableCell(
         classes=classes,
@@ -125,38 +114,6 @@ def get_gameresult_cell(game_result: GameResult,
         title=title)
 
 
-def count_game_results(home_finished_games,
-                       away_finished_games) -> tp.Tuple[int, int]:
-    """
-    :return: Tuple (won_count, lost_count)
-    """
-    home_win_result_types = ResultType.objects.filter(is_home_win=True)
-    away_win_result_types = ResultType.objects.filter(is_home_win=False)
-
-    home_wins = home_finished_games.filter(
-        result_type__in=home_win_result_types)
-    away_wins = away_finished_games.filter(
-        result_type__in=away_win_result_types)
-    home_loses = home_finished_games.filter(
-        result_type__in=away_win_result_types)
-    away_loses = away_finished_games.filter(
-        result_type__in=home_win_result_types)
-
-    return (home_wins.count() + away_wins.count(),
-            home_loses.count() + away_loses.count())
-
-
-def count_fouls(home_finished_games, away_finished_games) -> int:
-    home_fouls: int = home_finished_games.aggregate(
-        fouls=Coalesce(Sum("home_team_fouls"), 0)
-    )["fouls"]
-    away_fouls: int = away_finished_games.aggregate(
-        fouls=Coalesce(Sum("away_team_fouls"), 0)
-    )["fouls"]
-
-    return home_fouls + away_fouls
-
-
 def get_row(seed, team, group, num_teams):
     """
     Return dict of HtmlTableCell objects for one team.
@@ -164,27 +121,11 @@ def get_row(seed, team, group, num_teams):
     home_games = GameResult.objects.filter(home_team=team, group=group)
     away_games = GameResult.objects.filter(away_team=team, group=group)
 
-    games_won, games_lost = count_game_results(home_games, away_games)
-
-    num_fouls: int = count_fouls(home_games, away_games)
-
-    tie_breakers = {}
-    tie_breakers["won"] = games_won
-    tie_breakers["absences"] = (
-        home_games.filter(result_type__abbr="A2").count()
-        + away_games.filter(result_type__abbr="A1").count()
-    )
-    tie_breakers["serious_fouls"] = (
-        home_games.filter(result_type__abbr="F2").count()
-        + away_games.filter(result_type__abbr="F1").count()
-    )
-    tie_breakers["fouls"] = num_fouls
-    tie_breakers["black_loses"] = (
-        home_games.filter(result_type__abbr="B2").count()
-        + away_games.filter(result_type__abbr="B1").count()
-    )
-
-    words_difference: tp.List[int] = [0]
+    tie_breakers = {
+        tb: tie_breaker_calculators[tb](home_games, away_games)
+        for tb in TIE_BREAKERS_ORDER
+        if tb not in OPTIONAL_TIE_BREAKERS
+    }
 
     result_subrow: tp.List[HtmlTableCell] = [
         HtmlTableCell(
@@ -195,42 +136,48 @@ def get_row(seed, team, group, num_teams):
         rival_seed = game.away_team.seed
         result_subrow[rival_seed] = get_gameresult_cell(
             game,
-            is_team_home=True,
-            words_difference=words_difference)
+            is_team_home=True)
     for game in away_games:
         rival_seed = game.home_team.seed
         result_subrow[rival_seed] = get_gameresult_cell(
             game,
-            is_team_home=False,
-            words_difference=words_difference)
+            is_team_home=False)
 
-    tie_breakers["words_difference"] = words_difference[0]
-    tie_breakers["games_played"] = games_won + games_lost
-
-    for key in tie_breakers:
-        if key in TIE_BREAKERS_ORDER:
-            try:
-                tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
-            except KeyError:
-                raise KeyError(f"no tie breaker {key} in weights")
-        else:
-            raise KeyError(f"no tie breaker {key} in order")
+    games_lost = tie_breakers["games_played"] - tie_breakers["won"]
 
     row = {
         cell.class_: cell for cell in [
             HtmlTableCell(class_="place_cell", content=f"{seed + 1}"),
             HtmlTableCell(class_="team_cell", content=f"{team.short}"),
-            HtmlTableCell(class_="played_cell",
-                          content=f"{games_won + games_lost}"),
-            HtmlTableCell(class_="won_cell", content=f"{games_won}"),
-            HtmlTableCell(class_="lost_cell", content=f"{games_lost}"),
+            HtmlTableCell(
+                class_="played_cell",
+                content=f"{tie_breakers['games_played']}"),
+            HtmlTableCell(
+                class_="won_cell",
+                content=f"{tie_breakers['won']}"),
+            HtmlTableCell(
+                class_="lost_cell",
+                content=f"{games_lost}"),
             HtmlTableCell(
                 class_="words_difference_cell",
-                content=f"{words_difference[0]: }",
+                content=f"{tie_breakers['words_difference']: }",
                 title="Words difference"),
-            HtmlTableCell(class_="fouls_cell", content=f"{num_fouls}"),
+            HtmlTableCell(
+                class_="fouls_cell",
+                content=f"{tie_breakers['fouls']}"),
         ]
     }
+
+    for key in tie_breakers:
+        if key in TIE_BREAKERS_ORDER:
+            try:
+                tie_breakers[key] *= TIE_BREAKERS_WEIGHTS[key]
+            except KeyError as exception:
+                raise KeyError(
+                    f"no tie breaker {key} in weights") from exception
+        else:
+            raise KeyError(f"no tie breaker {key} in order")
+
     row["results"] = result_subrow
     row["tie_breakers"] = tie_breakers
     row["seed"] = seed
@@ -258,7 +205,49 @@ def get_result_table_with_sorted_results(table):
     return sorted_table
 
 
-def calculate_places(table):
+def are_all_games_finished(games, num_teams):
+    needed_games_amount = num_teams * (num_teams - 1) // 2
+    return needed_games_amount == len([
+        game for game in games if game.is_finished
+    ])
+
+
+def count_optional_tie_breaker(group: Group,
+                               tie_breaker,
+                               table,
+                               shared_places):
+    # Start counting from scratch.
+    for row in table:
+        row["tie_breakers"][tie_breaker] = 0
+    for place in set(shared_places):
+        if shared_places.count(place) == 1:
+            # No need for tie breaking
+            continue
+        place_sharing_seeds = {
+            i: row["seed"]
+            for i, row in enumerate(table)
+            if row["tie_breakers"]["shared_place"] == place
+        }
+        games = GameResult.objects.filter(
+            group=group,
+            home_team__seed__in=place_sharing_seeds.values(),
+            away_team__seed__in=place_sharing_seeds.values(),
+        )
+
+        if not are_all_games_finished(games, len(place_sharing_seeds)):
+            continue
+        for idx, seed in place_sharing_seeds.items():
+            tb_calculator = tie_breaker_calculators[tie_breaker]
+            table[idx]["tie_breakers"][tie_breaker] = tb_calculator(
+                home_games=games.filter(home_team__seed=seed),
+                away_games=games.filter(away_team__seed=seed)
+            )
+        for row in table:
+            row["tie_breakers"][tie_breaker] *= (
+                TIE_BREAKERS_WEIGHTS[tie_breaker])
+
+
+def calculate_places(group: Group, table):
     # Give shared_place 1 to everyone.
     for row in table:
         row["tie_breakers"]["shared_place"] = 0
@@ -267,25 +256,22 @@ def calculate_places(table):
 
     tie_breaker_idx = 0
     while tie_breaker_idx < len(TIE_BREAKERS_ORDER):
-        tie_breaker = TIE_BREAKERS_ORDER[tie_breaker_idx]
-        if tie_breaker in OPTIONAL_TIE_BREAKERS:
-            # TODO: add processing of optional tie breakers
-            tie_breaker_idx += 1
-            continue
         shared_places = [row["tie_breakers"]["shared_place"] for row in table]
         num_ties_before_breaking = num_teams - len(set(shared_places))
 
+        tie_breaker = TIE_BREAKERS_ORDER[tie_breaker_idx]
+
+        if tie_breaker in OPTIONAL_TIE_BREAKERS:
+            count_optional_tie_breaker(
+                group, tie_breaker, table, shared_places)
+
         tie_breakers = [
             "shared_place"
-        ] + [
-            tb for tb in TIE_BREAKERS_ORDER[:tie_breaker_idx + 1]
-            if tb not in OPTIONAL_TIE_BREAKERS
-        ]
+        ] + TIE_BREAKERS_ORDER[:tie_breaker_idx + 1]
 
         tie_break_values = lambda item: [
             item["tie_breakers"][tb]
             for tb in tie_breakers
-            if tb not in OPTIONAL_TIE_BREAKERS
         ]
         table.sort(
             key=tie_break_values,
@@ -302,23 +288,22 @@ def calculate_places(table):
                 # Get next place.
                 new_shared_places[place] = place
         for place in range(num_teams):
-            table[place]["tie_breakers"]["shared_place"] = new_shared_places[place]
+            table[place]["tie_breakers"][
+                "shared_place"
+            ] = new_shared_places[place]
 
         # Check if that tie breaker helps
-        shared_places = [row["tie_breakers"]["shared_place"] for row in table]
-        num_ties_after_breaking = num_teams - len(set(shared_places))
-        print(f"shared_places == {shared_places}")
-        print(f"num_ties_after_breaking == {num_ties_after_breaking}")
+        num_ties_after_breaking = num_teams - len(
+            {row["tie_breakers"]["shared_place"] for row in table}
+        )
+
         if num_ties_after_breaking == 0:
             break
         if tie_breaker in OPTIONAL_TIE_BREAKERS:
             # Optional tie breaker can be used more than 1 time!
-            if num_ties_after_breaking > num_ties_before_breaking:
+            if num_ties_before_breaking > num_ties_after_breaking:
                 continue
         tie_breaker_idx += 1
-
-    for row in table:
-        row["place_cell"].content = row["tie_breakers"]["shared_place"] + 1
 
 
 def render_result_table_content(group: Group) -> None:
@@ -336,14 +321,16 @@ def render_result_table_content(group: Group) -> None:
     # like "optional_won_between",
     # "optional_black_loses_between",
     # "optional_words_difference_between".
-    table_with_unsorted_results = [None for seed in range(num_teams)]
+    result_table = [None for seed in range(num_teams)]
     for seed in range(num_teams):
         team = teams[seed]
-        table_with_unsorted_results[seed] = get_row(
+        result_table[seed] = get_row(
             seed, team, group, num_teams)
-    calculate_places(table_with_unsorted_results)
+    calculate_places(group, result_table)
+    for row in result_table:
+        row["place_cell"].content = row["tie_breakers"]["shared_place"] + 1
 
-    return get_result_table_with_sorted_results(table_with_unsorted_results)
+    return get_result_table_with_sorted_results(result_table)
 
 
 # Number of rounds to show in "recent" and "upcoming"
