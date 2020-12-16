@@ -255,6 +255,7 @@ class ResultType(models.Model):
         blank=True,
         choices=SCORE_CHOICES,
     )
+    do_delete = models.BooleanField(default=False)
 
     @property
     def description(self) -> str:
@@ -448,7 +449,7 @@ class GameResult(models.Model):
 
     @property
     def is_finished(self) -> bool:
-        return self.result_type is not None
+        return self.result_type is not None and not self.result_type.do_delete
 
     @property
     def absolute_score(self) -> tp.Optional[int]:

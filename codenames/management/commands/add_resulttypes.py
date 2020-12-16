@@ -22,7 +22,8 @@ class Command(BaseCommand):
                 _description=result_type.description,
                 is_auto=result_type.is_auto,
                 is_home_win=result_type.is_home_win,
-                _auto_score=result_type.auto_score
+                _auto_score=result_type.auto_score,
+                do_delete=result_type.do_delete,
             )
             try:
                 existing_result_type = ResultType.objects.get(

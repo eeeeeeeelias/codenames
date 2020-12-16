@@ -125,34 +125,51 @@ def add_result(request, group_name: str):
                              games_choices=get_games_choices(group_name))
         if form.is_valid():
             data = request.POST
+
             result_type = ResultType.objects.get(id=data["result_type"])
-            score = int(data["score"])
-            if result_type.is_away_win:
-                score *= -1
-            GameResult.objects.filter(id=int(data["game"])).update(
-                result_type=data["result_type"],
-                score=score,
-                home_team_fouls=data["home_team_fouls"],
-                away_team_fouls=data["away_team_fouls"],
-            )
-            last_add_result = _("Result added successfully!")
+            if result_type.do_delete:
+                game = GameResult.objects.get(id=int(data["game"]))
+                if game.is_finished:
+                    GameResult.objects.filter(id=int(data["game"])).update(
+                        result_type=None,
+                        score=0,
+                        home_team_fouls=0,
+                        away_team_fouls=0
+                    )
+                    last_add_result = _("Result deleted successfully!")
+                else:
+                    last_add_result = _("Game isn't finished yet!")
+            else:
+                score = int(data["score"])
+                if result_type.is_away_win:
+                    score *= -1
+                GameResult.objects.filter(id=int(data["game"])).update(
+                    result_type=data["result_type"],
+                    score=score,
+                    home_team_fouls=data["home_team_fouls"],
+                    away_team_fouls=data["away_team_fouls"],
+                )
+                last_add_result = _("Result added successfully!")
             form = AddResultForm(games_choices=get_games_choices(group_name))
         else:
             last_add_result = _("Failed to add result!")
     elif request.method == "GET" or form.is_valid():
         form = AddResultForm(games_choices=get_games_choices(group_name))
 
-    auto_result_ids: tp.List[int] = [
+    ids_to_hide_score: tp.List[int] = [
         rt.id for rt in ResultType.objects.all() if rt.is_auto
     ]
-    absence_result_ids: tp.List[int] = [
+    ids_to_hide_fouls: tp.List[int] = [
         rt.id for rt in ResultType.objects.all() if rt.abbr.startswith("A")
+    ] + [
+        rt.id for rt in ResultType.objects.all() if rt.abbr == "DE"
     ]
+
     context = {
         "group_name": group_name,
         "last_add_result": last_add_result,
         "form": form,
-        "ids_to_hide_score": auto_result_ids,
-        "ids_to_hide_fouls": absence_result_ids,
+        "ids_to_hide_score": ids_to_hide_score,
+        "ids_to_hide_fouls": ids_to_hide_fouls,
     }
     return render(request, "codenames/add_result.html", context)
