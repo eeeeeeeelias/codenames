@@ -14,7 +14,6 @@ from .models import ResultType
 # finished all games with each other
 TIE_BREAKERS_ORDER = [
     "won",
-    "games_played",
     "optional_won_between",
     "absences",
     "serious_fouls",
@@ -23,6 +22,7 @@ TIE_BREAKERS_ORDER = [
     "optional_black_loses_between",
     "words_difference",
     "optional_words_difference_between",
+    "games_played",
 ]
 
 
