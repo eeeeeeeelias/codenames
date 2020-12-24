@@ -41,7 +41,26 @@ def start_view(request):
     return render(request, "codenames/start_page.html", context)
 
 
-def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
+def all_groups_unsorted_tables_view(request,
+                                    *,
+                                    cup_number=CURRENT_CUP_NUMBER):
+    return all_groups_tables_view(request,
+                                  cup_number=cup_number,
+                                  do_sort=False)
+
+def all_groups_sorted_tables_view(request,
+                                  *,
+                                  cup_number=CURRENT_CUP_NUMBER):
+    return all_groups_tables_view(request,
+                                  cup_number=cup_number,
+                                  do_sort=True)
+
+
+
+def all_groups_tables_view(request,
+                           *,
+                           cup_number=CURRENT_CUP_NUMBER,
+                           do_sort: bool):
     """
     View with tables of all groups.
     """
@@ -54,7 +73,8 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
 
     group_headers = {gn: render_result_table_header(cup_groups.get(name=gn))
                      for gn in group_names}
-    group_tables = {gn: render_result_table_content(cup_groups.get(name=gn))
+    group_tables = {gn: render_result_table_content(cup_groups.get(name=gn),
+                                                    do_sort)
                     for gn in group_names}
 
     upcoming_games_lists = {
@@ -73,6 +93,8 @@ def all_groups_tables_view(request, *, cup_number=CURRENT_CUP_NUMBER):
         "groups_tables": group_tables,
         "upcoming_games": upcoming_games_lists,
         "recent_games": recent_games_lists,
+        "path": request.path,
+        "update_time": 10,
     }
     return render(request, "codenames/all_groups_tables.html", context)
 
@@ -93,7 +115,7 @@ def one_group_table_view(request, group_name, *,
         raise Http404(NON_EXISTING_GROUP_ERROR_MESSAGE) from group_no_exist
 
     group_header = render_result_table_header(group)
-    group_table = render_result_table_content(group)
+    group_table = render_result_table_content(group, do_sort=True)
 
     upcoming_games_list = get_upcoming_games_schedule(group)
     recent_games_list = get_recent_games_schedule(group)
@@ -105,6 +127,7 @@ def one_group_table_view(request, group_name, *,
         "group_table": group_table,
         "upcoming_games": upcoming_games_list,
         "recent_games": recent_games_list,
+        "update_time": 10,
     }
     return render(request, "codenames/one_group_table.html", context)
 

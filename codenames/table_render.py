@@ -306,7 +306,7 @@ def calculate_places(group: Group, table):
         tie_breaker_idx += 1
 
 
-def render_result_table_content(group: Group) -> None:
+def render_result_table_content(group: Group, do_sort: bool) -> None:
     """
     TODO: stub
     """
@@ -326,9 +326,10 @@ def render_result_table_content(group: Group) -> None:
         team = teams[seed]
         result_table[seed] = get_row(
             seed, team, group, num_teams)
-    calculate_places(group, result_table)
-    for row in result_table:
-        row["place_cell"].content = row["tie_breakers"]["shared_place"] + 1
+    if do_sort:
+        calculate_places(group, result_table)
+        for row in result_table:
+            row["place_cell"].content = row["tie_breakers"]["shared_place"] + 1
 
     return get_result_table_with_sorted_results(result_table)
 
