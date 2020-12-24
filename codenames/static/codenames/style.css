@@ -1,65 +1,66 @@
 :root {
-    --background-color: #EAE7DC;
-    --dark-color: #E85A4F;
-    --middle-color: #E98074;
-    --light-color: #D8C3A5;
-    --dark-gray-color: #8E8D8A;
-    --middle-gray-color: #CCCCCC;
-    --light-gray-color: #EEEEEE;
-    --black-color: #202020;
+  --background-color: #EAE7DC;
+  --dark-color: #E85A4F;
+  --middle-color: #E98074;
+  --light-color: #D8C3A5;
+  --dark-gray-color: #8E8D8A;
+  --middle-gray-color: #CCCCCC;
+  --light-gray-color: #EEEEEE;
+  --black-color: #202020;
 }
 
 body {
-    background-color: var(--background-color);
+  background-color: var(--background-color);
 }
 
 table, th, td {
-    border-collapse: collapse;
-    border: 2px solid var(--dark-color);
+  border-collapse: collapse;
+  border: 2px solid var(--dark-color);
+  font-size: 1.5vw;
 }
 
 th {
-    background-color: var(--middle-color);
+  background-color: var(--middle-color);
 }
 
 .won_cell {
-    font-weight: bolder;
-    background-color: var(--light-color);
+  font-weight: bolder;
+  background-color: var(--middle-color);
 }
 
 .place_header {
-    width: 15px;
-    text-align: center;
+  width: 2vw;
+  text-align: center;
 }
 
 .place_cell {
-    text-align: center;
+  text-align: center;
 }
 
 .gameresult_header {
-    width: 30px;
+  width: 3vw;
 }
 
 .gameresult_cell, .played_cell, .won_cell, .lost_cell, .fouls_cell, .words_difference_cell {
-    text-align: center;
+  text-align: center;
 }
 
 .auto_win {
-    font-style: italic;
-    background-color: var(--dark-gray-color);
+  font-style: italic;
+  background-color: var(--dark-gray-color);
 }
 
 .auto_lose {
-    background-color: var(--dark-gray-color);
+  background-color: var(--dark-gray-color);
 }
 
 .itself_cell {
-    background-color: var(--black-color);
+  background-color: var(--black-color);
 }
 
 .scheduled {
-    font-size: small;
-    color: var(--dark-gray-color);
+  font-size: 1.2vw;
+  color: var(--dark-gray-color);
 }
 
 input[type=number], select {
@@ -91,25 +92,29 @@ input[type=submit] {
 .container {
   border-radius: 5px;
   background-color: var(--light-color);
-  padding: 20px;
+  padding: 10px;
+}
+
+.row {
+  border-radius: 5px;
 }
 
 .col-25 {
-    float: left;
-    width: 25%;
-    margin-top: 6px;
+  float: left;
+  width: 25%;
+  margin-top: 6px;
 }
 
 .col-75 {
-    float: left;
-    width: 75%;
-    margin-top: 6px;
+  float: left;
+  width: 75%;
+  margin-top: 6px;
 }
 
 .col-100 {
-    float: left;
-    width: 100%;
-    margin-top: 6px;
+  float: left;
+  width: 100%;
+  margin-top: 6px;
 }
 
 .row:after {
@@ -122,5 +127,9 @@ input[type=submit] {
   .col-25, .col-75, input[type=submit] {
     width: 100%;
     margin-top: 0;
+  }
+
+  td.scheduled div {
+    display: none;
   }
 }
