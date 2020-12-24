@@ -42,13 +42,13 @@
     <div class="container">
         <div class="row">
             <div class="col-100">
-                Upcoming games:
+                <b>Upcoming games:</b>
             </div>
         </div>
         {% for round in upcoming_games %}
             <div class="row">
                 <div class="col-100">
-                    Round {{ round.0 }}:
+                    <b>Round {{ round.0 }}:</b>
                 </div>
                 {% for game in round.1 %}
                 <div class="col-100">
@@ -59,14 +59,20 @@
         {% endfor %}
     </div>
     {% endif %}
+    
     <br>
+
     {% if recent_games %}
     <div class="container">
-        Recent games:
+        <div class="row">
+            <div class="col-100">
+                <b>Recent games:</b>
+            </div>
+        </div>
         {% for round in recent_games %}
             <div class="row">
                 <div class="col-100">
-                    Round {{ round.0 }}:
+                    <b>Round {{ round.0 }}:</b>
                 </div>
                 {% for game in round.1 %}
                 <div class="col-100">
