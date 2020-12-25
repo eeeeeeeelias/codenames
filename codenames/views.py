@@ -134,7 +134,9 @@ def one_group_table_view(request, group_name, *,
 
 def get_games_choices(group_name: str):
     games_list = sorted(
-        GameResult.objects.filter(group__name=group_name),
+        GameResult.objects.filter(
+            group__name=group_name,
+            group__cup__number=CURRENT_CUP_NUMBER),
         key=lambda x: (x.is_finished, x.round_number, x.arena.short))
     return [
         (game.id, game) for game in games_list
