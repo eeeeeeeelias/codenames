@@ -68,7 +68,7 @@ class Command(BaseCommand):
         with open(f"backup_{backup_time_string}.txt", "w") as backup:
             for game in group_games:
                 print(game, file=backup)
-        os.system(f"cp db.sqlite3 db_backup_{backup_time_string}")
+        # TODO: backup
         group_games.update(
             score=0,
             result_type=None,
