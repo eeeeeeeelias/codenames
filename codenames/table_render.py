@@ -60,14 +60,14 @@ def render_result_table_header(group: Group) -> None:
     group_size = Team.objects.filter(group=group).count()
     header_row = {
         cell.class_: cell for cell in [
-            HtmlTableCell(class_="place_header", content="#", title="Place"),
-            HtmlTableCell(class_="team_header", content="Team"),
-            HtmlTableCell(class_="played_header", content="Played"),
+            HtmlTableCell(class_="place_header", content="#", title="Место"),
+            HtmlTableCell(class_="team_header", content="Команда"),
+            HtmlTableCell(class_="played_header", content="Сыграно"),
             HtmlTableCell(class_="won_header", content="Won"),
             HtmlTableCell(class_="lost_header", content="Lost"),
             HtmlTableCell(class_="words_difference_header", content="+/−",
-                          title="Words difference"),
-            HtmlTableCell(class_="fouls_header", content="Fouls"),
+                          title="Разница слов"),
+            HtmlTableCell(class_="fouls_header", content="Фолы"),
         ]
     }
     return [

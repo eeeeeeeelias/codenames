@@ -42,13 +42,13 @@
     <div class="container">
         <div class="row">
             <div class="col-100">
-                <b>Upcoming games:</b>
+                <b>Ближайшие матчи:</b>
             </div>
         </div>
         {% for round in upcoming_games %}
             <div class="row">
                 <div class="col-100">
-                    <b>Round {{ round.0 }}:</b>
+                    <b>Тур {{ round.0 }}:</b>
                 </div>
                 {% for game in round.1 %}
                 <div class="col-100">
@@ -66,13 +66,13 @@
     <div class="container">
         <div class="row">
             <div class="col-100">
-                <b>Recent games:</b>
+                <b>Сыгранные матчи:</b>
             </div>
         </div>
         {% for round in recent_games %}
             <div class="row">
                 <div class="col-100">
-                    <b>Round {{ round.0 }}:</b>
+                    <b>Тур {{ round.0 }}:</b>
                 </div>
                 {% for game in round.1 %}
                 <div class="col-100">
