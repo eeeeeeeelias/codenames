@@ -19,7 +19,7 @@ urlpatterns = [
          views.one_group_table_view,
          name="one_group_table"),
 
-    path("", views.start_view, name="index"),
+    path("", views.all_groups_sorted_tables_view, name="index"),
     path("raw/",
          views.all_groups_unsorted_tables_view,
          name="all_groups_tables"),
