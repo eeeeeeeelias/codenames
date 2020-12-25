@@ -1,13 +1,13 @@
 {
     "1": [
         {
-            "seat": 2,
+            "seat": 1,
             "first": 1,
             "second": 2,
             "trail": ""
         },
         {
-            "seat": 1,
+            "seat": 2,
             "first": 3,
             "second": 4,
             "trail": ""
