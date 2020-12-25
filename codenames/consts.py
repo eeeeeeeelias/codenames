@@ -6,7 +6,7 @@ import typing as tp
 
 from string import ascii_uppercase
 
-CURRENT_CUP_NUMBER: int = 5
+CURRENT_CUP_NUMBER: int = 6
 
 GROUPS_NUMBER: int = 4
 
